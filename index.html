@@ -581,6 +581,13 @@
             'Koordinator Lapangan'
         ];
 
+        const THEME_PRESETS = [
+            { name: 'Champagne Classic', bg: '#FAF8F5', bgAlt: '#F3EFEA', text: '#1E1E1E', accent: '#9E8A68', accentDark: '#7C6B4E', accentLight: '#EFE9DE' },
+            { name: 'Sage Botanical', bg: '#F6F8F5', bgAlt: '#ECEFE9', text: '#1D241E', accent: '#6B8269', accentDark: '#4F634D', accentLight: '#E3EAE2' },
+            { name: 'Dusty Rose Editorial', bg: '#FAF6F6', bgAlt: '#F3EAEB', text: '#241D1E', accent: '#B07B82', accentDark: '#8C5C63', accentLight: '#F2E3E5' },
+            { name: 'Midnight Luxury', bg: '#F7F6F3', bgAlt: '#ECE9E2', text: '#141414', accent: '#2C2A29', accentDark: '#0F0F0F', accentLight: '#E2DFD7' }
+        ];
+
         const DEFAULT_SITE_CONFIG = {
             brandName: 'TIARE',
             brandSubtext: 'ALARA MOMENTS WEDDING STUDIO',
@@ -906,6 +913,7 @@
         let activeClientCode = 'WED-2026';
         let activeStaffUser = null;
         let isSuperAdminAuthenticated = false;
+        let isBuilderUnlockedInSession = false;
         let isPrivateSiteUnlocked = false;
         let activeAdminModule = 'cms';
         let activeSuperAdminTab = 'theme';
@@ -1049,8 +1057,18 @@
             setText('header-cart-count', countStr);
             setText('mobile-cart-count', countStr);
 
-            // Strictly show Web Builder triggers ONLY when Super Admin is authenticated
-            const canUseBuilder = isSuperAdminAuthenticated && activeStaffUser && activeStaffUser.role === 'superadmin';
+            // Web Builder hanya tampil & aktif jika Super Admin terautentikasi dan sesi builder belum dikunci
+            const canUseBuilder = Boolean(
+                isSuperAdminAuthenticated &&
+                isBuilderUnlockedInSession &&
+                activeStaffUser &&
+                activeStaffUser.role === 'superadmin'
+            );
+            if (!canUseBuilder && isVisualBuilderOpen) {
+                isVisualBuilderOpen = false;
+                document.getElementById('visual-builder-drawer')?.classList.add('hidden');
+                document.getElementById('view-landing')?.classList.remove('sm:pl-[430px]');
+            }
             document.getElementById('top-bar-builder-btn')?.classList.toggle('hidden', !canUseBuilder);
             document.getElementById('top-bar-builder-divider')?.classList.toggle('hidden', !canUseBuilder);
             document.getElementById('footer-builder-btn')?.classList.toggle('hidden', !canUseBuilder);
@@ -1104,9 +1122,20 @@
         function logoutStaffSession() {
             activeStaffUser = null;
             isSuperAdminAuthenticated = false;
+            isBuilderUnlockedInSession = false;
             if (isVisualBuilderOpen) toggleVisualBuilder(false);
+            applySiteThemeAndHeader();
             switchMainView('landing');
             showToast('Sesi staff telah keluar. Web Builder dikunci kembali.');
+        }
+
+        function lockWebBuilderNow() {
+            isBuilderUnlockedInSession = false;
+            isVisualBuilderOpen = false;
+            document.getElementById('visual-builder-drawer')?.classList.add('hidden');
+            document.getElementById('view-landing')?.classList.remove('sm:pl-[430px]');
+            applySiteThemeAndHeader();
+            showToast('Web Builder telah dikunci kembali.');
         }
 
         function switchMainView(view) {
@@ -1979,6 +2008,7 @@
             const prevUser = activeStaffUser ? `${activeStaffUser.name} (${activeStaffUser.roleLabel})` : null;
             activeStaffUser = staff;
             isSuperAdminAuthenticated = staff.role === 'superadmin';
+            isBuilderUnlockedInSession = staff.role === 'superadmin';
             pendingTargetRole = null;
             if (pinInput) pinInput.value = '';
             closeAuthModal();
@@ -2005,6 +2035,7 @@
             if (!staff) return;
             activeStaffUser = staff;
             isSuperAdminAuthenticated = staff.role === 'superadmin';
+            isBuilderUnlockedInSession = staff.role === 'superadmin';
             pendingTargetRole = null;
             closeAuthModal();
             applySiteThemeAndHeader();
@@ -2032,6 +2063,7 @@
             // Akhiri sesi role sebelumnya dan wajibkan login ulang dengan PIN role tujuan
             activeStaffUser = null;
             isSuperAdminAuthenticated = false;
+            isBuilderUnlockedInSession = false;
             pendingTargetRole = targetRole;
             if (isVisualBuilderOpen) toggleVisualBuilder(false);
             applySiteThemeAndHeader();
@@ -2073,15 +2105,28 @@
         }
 
         // =====================================================================
-        // SPLIT-SCREEN VISUAL WEB BUILDER DRAWER (SUPER ADMIN ONLY)
+        // SPLIT-SCREEN VISUAL WEB BUILDER DRAWER (SUPER ADMIN ONLY & PRIVATE)
         // =====================================================================
         function toggleVisualBuilder(forceState) {
-            if (!isSuperAdminAuthenticated || !activeStaffUser || activeStaffUser.role !== 'superadmin') {
+            const hasPrivateBuilderAccess = Boolean(
+                isSuperAdminAuthenticated &&
+                isBuilderUnlockedInSession &&
+                activeStaffUser &&
+                activeStaffUser.role === 'superadmin'
+            );
+            if (!hasPrivateBuilderAccess) {
                 isVisualBuilderOpen = false;
                 document.getElementById('visual-builder-drawer')?.classList.add('hidden');
                 document.getElementById('view-landing')?.classList.remove('sm:pl-[430px]');
+                pendingTargetRole = 'superadmin';
                 openAuthModal('staff');
-                showToast('Akses Ditolak: Web Builder hanya dapat dibuka oleh Super Admin (PIN).', 'error');
+                const notice = document.getElementById('role-switch-notice');
+                const noticeText = document.getElementById('role-switch-notice-text');
+                if (notice && noticeText) {
+                    notice.classList.remove('hidden');
+                    noticeText.textContent = 'Web Builder bersifat privat. Masukkan PIN 4-digit Super Admin untuk membuka & mengedit tampilan.';
+                }
+                showToast('Web Builder privat: verifikasi PIN Super Admin terlebih dahulu.', 'error');
                 return;
             }
             isVisualBuilderOpen = typeof forceState === 'boolean' ? forceState : !isVisualBuilderOpen;
@@ -2997,6 +3042,9 @@
                                 </div>
                                 <button type="button" onclick="logoutStaffSession()" class="px-3 py-1.5 rounded-xl bg-red-50 text-red-700 hover:bg-red-600 hover:text-white font-semibold whitespace-nowrap transition-colors">
                                     Keluar Sesi Admin
+                                </button>
+                                <button type="button" onclick="lockWebBuilderNow()" class="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-800 hover:bg-amber-600 hover:text-white font-semibold whitespace-nowrap transition-colors">
+                                    Kunci Web Builder
                                 </button>
                             </div>
                             <label class="p-3 rounded-xl bg-ivory border border-charcoal/15 flex items-center justify-between cursor-pointer">
