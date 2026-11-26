@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OLORIS PICTURE — Wedding & Editorial Studio</title>
+    <title>OLORIS PICTURE — Wedding &amp; Editorial Studio</title>
 
     <!-- Google Fonts: Cormorant Garamond, Plus Jakarta Sans & Great Vibes -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,6 +39,7 @@
     </script>
 
     <style>
+        /* Design tokens & custom CSS variables updated dynamically by theme presets and CMS */
         :root {
             --color-bg: #FAF8F5;
             --color-bg-alt: #F3EFEA;
@@ -48,16 +49,20 @@
             --color-accent-dark: #7C6B4E;
             --color-accent-light: #EFE9DE;
         }
+
         body {
             background-color: var(--color-bg);
             color: var(--color-text);
             font-family: 'Plus Jakarta Sans', sans-serif;
             overflow-x: hidden;
         }
+
+        /* Custom subtle scrollbar */
         ::-webkit-scrollbar { width: 7px; height: 7px; }
         ::-webkit-scrollbar-track { background: var(--color-bg-alt); }
         ::-webkit-scrollbar-thumb { background: var(--color-accent); border-radius: 9999px; }
 
+        /* Entrance & editorial motion animations */
         .fade-in { animation: fadeIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -97,6 +102,7 @@
             animation: floatGlow 6s ease-in-out infinite;
         }
 
+        /* Editorial typography tracking helpers */
         .tiare-tracking { letter-spacing: 0.28em; }
         .tiare-nav-tracking { letter-spacing: 0.18em; }
         .tiare-card-tracking { letter-spacing: 0.24em; }
@@ -121,6 +127,7 @@
             -webkit-backdrop-filter: blur(14px);
         }
 
+        /* Print styling for invoice modal */
         @media print {
             body * { visibility: hidden; }
             #printable-invoice, #printable-invoice * { visibility: visible; }
@@ -134,26 +141,28 @@
 </head>
 <body class="antialiased selection:bg-champagne selection:text-white">
 
-    <!-- Toast Notification -->
+    <!-- Toast Notification Container -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-[110] flex flex-col gap-2 pointer-events-none"></div>
 
     <!-- ===================================================================== -->
-    <!-- SPLIT-SCREEN VISUAL WEB BUILDER DRAWER                                -->
+    <!-- SPLIT-SCREEN VISUAL WEB BUILDER DRAWER (SUPER ADMIN ONLY)             -->
     <!-- ===================================================================== -->
     <aside id="visual-builder-drawer" class="hidden fixed inset-y-0 left-0 z-[95] w-full sm:w-[430px] bg-white border-r border-charcoal/15 shadow-2xl flex flex-col">
         <div class="px-5 py-4 bg-charcoal text-white flex items-center justify-between">
             <div class="flex items-center gap-2.5">
-                <span class="w-8 h-8 rounded-lg bg-champagne text-white flex items-center justify-center"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+                <span class="w-8 h-8 rounded-lg bg-champagne text-white flex items-center justify-center">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </span>
                 <div>
-                    <h3 class="font-serif text-xl leading-none tracking-wider">TIARE WEB BUILDER</h3>
+                    <h3 class="font-serif text-xl leading-none tracking-wider">OLORIS WEB BUILDER</h3>
                     <p class="text-[10px] text-white/70 uppercase tracking-widest mt-0.5">Live Storefront Customizer</p>
                 </div>
             </div>
             <div class="flex items-center gap-1.5">
                 <button type="button" onclick="openFullCMSFromBuilder()" class="px-2.5 py-1.5 rounded-lg bg-champagne hover:bg-champagneDark text-white text-[11px] font-semibold">
-                    ERP & CMS
+                    ERP &amp; CMS
                 </button>
-                <button type="button" onclick="toggleVisualBuilder(false)" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
+                <button type="button" onclick="toggleVisualBuilder(false)" aria-label="Tutup Web Builder" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -167,13 +176,13 @@
                 Reset Default
             </button>
             <button type="button" onclick="showToast('Semua perubahan tampilan tersimpan otomatis!'); toggleVisualBuilder(false);" class="px-5 py-2 rounded-lg bg-champagne hover:bg-champagneDark text-white text-xs font-semibold tracking-wider uppercase shadow">
-                Selesai & Terapkan
+                Selesai &amp; Terapkan
             </button>
         </div>
     </aside>
 
     <!-- ===================================================================== -->
-    <!-- VIEW 1: TIARE EDITORIAL PUBLIC WEBSITE                                -->
+    <!-- VIEW 1: OLORIS PICTURE EDITORIAL PUBLIC WEBSITE                       -->
     <!-- ===================================================================== -->
     <div id="view-landing" class="min-h-screen flex flex-col bg-ivory transition-all duration-300">
 
@@ -205,7 +214,7 @@
             </div>
         </div>
 
-        <!-- PRIVATE WEBSITE LOCK SCREEN (SHOWN WHEN WEBSITE PRIVACY MODE IS ENABLED) -->
+        <!-- PRIVATE WEBSITE LOCK SCREEN -->
         <div id="private-site-gate" class="hidden flex-1 flex items-center justify-center px-4 py-20 bg-ivory">
             <div class="max-w-md w-full bg-white p-8 sm:p-10 border border-champagne/30 shadow-2xl text-center space-y-6">
                 <div class="w-14 h-14 mx-auto rounded-full bg-champagneLight text-champagneDark flex items-center justify-center text-xl">
@@ -229,7 +238,7 @@
                     <button type="button" onclick="openAuthModal('client')" class="text-champagneDark font-semibold hover:underline">
                         Portal Lacak Klien
                     </button>
-                    <span class="text-charcoal/20">•</span>
+                    <span class="text-charcoal/20">&bull;</span>
                     <button type="button" onclick="openAuthModal('staff')" class="text-charcoalSoft hover:text-charcoal font-medium">
                         Login Staff / Super Admin
                     </button>
@@ -237,14 +246,14 @@
             </div>
         </div>
 
-        <!-- 2. CENTERED TIARE EDITORIAL HEADER -->
+        <!-- 2. CENTERED EDITORIAL HEADER -->
         <header id="main-navbar" class="sticky top-0 z-40 frosted-glass border-b border-champagne/20 transition-all">
             <div class="max-w-7xl mx-auto px-4 sm:px-8 pt-6 pb-5">
                 <div class="flex items-center justify-between lg:justify-center relative">
-                    <button type="button" onclick="toggleMobileNav()" class="lg:hidden p-2 text-charcoal hover:text-champagne">
+                    <button type="button" onclick="toggleMobileNav()" aria-label="Buka Menu Navigasi" class="lg:hidden p-2 text-charcoal hover:text-champagne">
                         <i class="fa-solid fa-bars text-lg"></i>
                     </button>
-                    <a href="#top-hero" class="text-center group">
+                    <a href="#top-hero" onclick="openPublicPage('home')" class="text-center group">
                         <div class="flex items-center justify-center gap-2 mb-1 opacity-75">
                             <span class="w-5 h-[1px] bg-champagne"></span>
                             <i class="fa-solid fa-spa text-[9px] text-champagne"></i>
@@ -258,10 +267,10 @@
                         </span>
                     </a>
                     <div class="flex lg:hidden items-center gap-3 text-xs text-charcoal">
-                        <a href="#booking" class="relative p-1.5">
+                        <button type="button" onclick="openPublicPage('booking')" class="relative p-1.5">
                             <i class="fa-solid fa-bag-shopping"></i>
-                            <span id="mobile-cart-count" class="ml-0.5 font-semibold">(0)</span>
-                        </a>
+                            <span id="mobile-cart-count" class="ml-0.5 font-semibold">(2)</span>
+                        </button>
                     </div>
                 </div>
 
@@ -271,22 +280,22 @@
                         <span class="w-4 h-[1px] bg-champagne/40"></span>
                         <a id="header-soc-ig" href="#contact" class="hover:text-champagne transition-colors" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
                         <span class="w-4 h-[1px] bg-champagne/40"></span>
-                        <a id="header-soc-pin" href="#gallery" class="hover:text-champagne transition-colors" aria-label="Pinterest"><i class="fa-brands fa-pinterest-p"></i></a>
+                        <a id="header-soc-pin" href="#gallery" onclick="openPublicPage('home', 'gallery')" class="hover:text-champagne transition-colors" aria-label="Pinterest"><i class="fa-brands fa-pinterest-p"></i></a>
                     </div>
 
-                    <nav class="col-span-6 flex items-center justify-center gap-8 uppercase tiare-nav-tracking font-medium text-charcoal">
-                        <a href="#top-hero" class="pb-1 border-b border-champagne text-champagneDark">HOME</a>
-                        <a href="#showcase" class="pb-1 border-b border-transparent hover:border-champagne hover:text-champagneDark transition-colors">SHOWCASE</a>
-                        <a href="#packages" class="pb-1 border-b border-transparent hover:border-champagne hover:text-champagneDark transition-colors">PACKAGES</a>
-                        <a href="#gallery" class="pb-1 border-b border-transparent hover:border-champagne hover:text-champagneDark transition-colors">GALLERY</a>
-                        <a href="#booking" class="pb-1 border-b border-transparent hover:border-champagne hover:text-champagneDark transition-colors">BOOKING</a>
-                        <a href="#contact" class="pb-1 border-b border-transparent hover:border-champagne hover:text-champagneDark transition-colors">CONTACT</a>
+                    <nav id="desktop-main-nav" class="col-span-6 flex items-center justify-center gap-8 uppercase tiare-nav-tracking font-medium text-charcoal">
+                        <a href="#top-hero" data-nav-page="home" onclick="openPublicPage('home')" class="pb-1 border-b border-champagne text-champagneDark">HOME</a>
+                        <a href="#showcase" data-nav-page="showcase" onclick="openPublicPage('home', 'showcase')" class="pb-1 border-b border-transparent hover:border-champagne hover:text-champagneDark transition-colors">SHOWCASE</a>
+                        <a href="#packages" data-nav-page="packages" onclick="openPublicPage('packages')" class="pb-1 border-b border-transparent hover:border-champagne hover:text-champagneDark transition-colors">PRICELIST</a>
+                        <a href="#gallery" data-nav-page="gallery" onclick="openPublicPage('home', 'gallery')" class="pb-1 border-b border-transparent hover:border-champagne hover:text-champagneDark transition-colors">GALLERY</a>
+                        <a href="#booking" data-nav-page="booking" onclick="openPublicPage('booking')" class="pb-1 border-b border-transparent hover:border-champagne hover:text-champagneDark transition-colors">BOOKING</a>
+                        <a href="#contact" data-nav-page="contact" onclick="scrollToContactFooter(event)" class="pb-1 border-b border-transparent hover:border-champagne hover:text-champagneDark transition-colors">CONTACT</a>
                     </nav>
 
                     <div class="col-span-3 flex items-center justify-end gap-5 text-charcoalSoft">
-                        <a href="#booking" class="hover:text-charcoal transition-colors">
-                            Booking <span id="header-cart-count" class="text-champagneDark font-semibold">(0)</span>
-                        </a>
+                        <button type="button" onclick="openPublicPage('booking')" class="hover:text-charcoal transition-colors">
+                            Booking <span id="header-cart-count" class="text-champagneDark font-semibold">(2)</span>
+                        </button>
                         <button type="button" onclick="focusHeroSearch()" class="hover:text-charcoal transition-colors flex items-center gap-1.5">
                             <span>Search</span>
                             <i class="fa-solid fa-magnifying-glass text-[11px] text-champagne"></i>
@@ -296,12 +305,12 @@
             </div>
 
             <div id="mobile-nav-drawer" class="hidden lg:hidden bg-white border-t border-charcoal/10 px-6 py-4 space-y-3 text-xs uppercase tiare-nav-tracking">
-                <a href="#top-hero" onclick="toggleMobileNav()" class="block py-1.5 text-champagneDark font-semibold">Home</a>
-                <a href="#showcase" onclick="toggleMobileNav()" class="block py-1.5 text-charcoal">Showcase Categories</a>
-                <a href="#packages" onclick="toggleMobileNav()" class="block py-1.5 text-charcoal">Packages &amp; Pricelist</a>
-                <a href="#gallery" onclick="toggleMobileNav()" class="block py-1.5 text-charcoal">Gallery Portfolio</a>
-                <a href="#booking" onclick="toggleMobileNav()" class="block py-1.5 text-charcoal">Booking &amp; Drive</a>
-                <a href="#contact" onclick="toggleMobileNav()" class="block py-1.5 text-charcoal">Contact</a>
+                <a href="#top-hero" data-mobile-page="home" onclick="openPublicPage('home'); toggleMobileNav();" class="block py-1.5 text-champagneDark font-semibold">Home</a>
+                <a href="#showcase" data-mobile-page="showcase" onclick="openPublicPage('home', 'showcase'); toggleMobileNav();" class="block py-1.5 text-charcoal">Showcase Categories</a>
+                <a href="#packages" data-mobile-page="packages" onclick="openPublicPage('packages'); toggleMobileNav();" class="block py-1.5 text-charcoal">Packages &amp; Pricelist</a>
+                <a href="#gallery" data-mobile-page="gallery" onclick="openPublicPage('home', 'gallery'); toggleMobileNav();" class="block py-1.5 text-charcoal">Gallery Portfolio</a>
+                <a href="#booking" data-mobile-page="booking" onclick="openPublicPage('booking'); toggleMobileNav();" class="block py-1.5 text-charcoal">Booking &amp; Drive</a>
+                <a href="#contact" onclick="scrollToContactFooter(event); toggleMobileNav();" class="block py-1.5 text-charcoal">Contact</a>
             </div>
         </header>
 
@@ -339,9 +348,9 @@
                 </div>
             </div>
             <div class="max-w-6xl mx-auto px-4 sm:px-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-charcoalSoft">
-                <p id="footer-copyright">© 2026 Oloris Picture. All Rights Reserved.</p>
+                <p id="footer-copyright">&copy; 2026 Oloris Picture. All Rights Reserved.</p>
                 <div class="flex items-center gap-4">
-                    <span id="cloud-sync-footer-badge" class="text-champagneDark font-medium"><i class="fa-solid fa-cloud-arrow-up mr-1"></i>Local &amp; Cloud Ready</span>
+                    <span id="cloud-sync-footer-badge" class="text-champagneDark font-medium"><i class="fa-solid fa-database mr-1"></i>Local Auto-Save Aktif</span>
                     <button type="button" onclick="openAuthModal('staff')" class="hover:text-charcoal underline">Staff &amp; Super Admin</button>
                 </div>
             </div>
@@ -431,7 +440,7 @@
                     <span class="font-serif text-xl uppercase tiare-tracking text-charcoal">OLORIS PICTURE</span>
                     <p class="text-[11px] text-charcoalSoft">Portal Lacak Klien &amp; Login Internal Studio</p>
                 </div>
-                <button type="button" onclick="closeAuthModal()" class="w-8 h-8 rounded-full hover:bg-ivory flex items-center justify-center text-charcoal">
+                <button type="button" onclick="closeAuthModal()" aria-label="Tutup Modal Login" class="w-8 h-8 rounded-full hover:bg-ivory flex items-center justify-center text-charcoal">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -469,7 +478,7 @@
                     </div>
                     <form onsubmit="loginAsStaffByPin(event)" class="space-y-3">
                         <label class="block text-xs font-semibold uppercase tracking-wider text-charcoalSoft">Masukkan PIN Akses (4 Digit)</label>
-                        <input type="password" id="staff-pin-input" required maxlength="4" pattern="[0-9]{4}" placeholder="••••" class="w-full px-4 py-3 rounded-xl bg-white border border-charcoal/20 font-mono text-center text-lg tracking-[0.5em] focus:outline-none focus:border-champagne">
+                        <input type="password" id="staff-pin-input" required maxlength="4" pattern="[0-9]{4}" placeholder="&bull;&bull;&bull;&bull;" class="w-full px-4 py-3 rounded-xl bg-white border border-charcoal/20 font-mono text-center text-lg tracking-[0.5em] focus:outline-none focus:border-champagne">
                         <button type="submit" class="w-full py-3 rounded-xl bg-charcoal hover:bg-champagneDark text-white text-xs font-semibold uppercase tracking-widest transition-colors">
                             Masuk ke Dashboard ERP
                         </button>
@@ -488,28 +497,28 @@
                                 <span class="w-9 h-9 rounded-lg bg-champagne text-white flex items-center justify-center"><i class="fa-solid fa-crown"></i></span>
                                 <div>
                                     <span class="text-xs font-bold block text-charcoal">Super Admin + CMS</span>
-                                    <span class="text-[11px] text-charcoalSoft">PIN: <span class="demo-pin-mask font-mono font-bold" data-role="superadmin">••••</span> • Edit Web &amp; ERP</span>
+                                    <span class="text-[11px] text-charcoalSoft">PIN: <span class="demo-pin-mask font-mono font-bold" data-role="superadmin">&bull;&bull;&bull;&bull;</span> &bull; Edit Web &amp; ERP</span>
                                 </div>
                             </button>
                             <button type="button" onclick="demoLoginStaff('admin')" class="p-3 rounded-xl bg-white hover:border-champagne border border-charcoal/15 text-left transition-all flex items-center gap-3">
                                 <span class="w-9 h-9 rounded-lg bg-charcoal text-white flex items-center justify-center"><i class="fa-solid fa-calendar-check"></i></span>
                                 <div>
                                     <span class="text-xs font-bold block text-charcoal">Admin Operasional</span>
-                                    <span class="text-[11px] text-charcoalSoft">PIN: <span class="demo-pin-mask font-mono font-bold" data-role="admin">••••</span> • Jadwal &amp; Kru</span>
+                                    <span class="text-[11px] text-charcoalSoft">PIN: <span class="demo-pin-mask font-mono font-bold" data-role="admin">&bull;&bull;&bull;&bull;</span> &bull; Jadwal &amp; Kru</span>
                                 </div>
                             </button>
                             <button type="button" onclick="demoLoginStaff('finance')" class="p-3 rounded-xl bg-white hover:border-champagne border border-charcoal/15 text-left transition-all flex items-center gap-3">
                                 <span class="w-9 h-9 rounded-lg bg-emerald-700 text-white flex items-center justify-center"><i class="fa-solid fa-wallet"></i></span>
                                 <div>
                                     <span class="text-xs font-bold block text-charcoal">Keuangan / Finance</span>
-                                    <span class="text-[11px] text-charcoalSoft">PIN: <span class="demo-pin-mask font-mono font-bold" data-role="finance">••••</span> • Invoice &amp; Laba</span>
+                                    <span class="text-[11px] text-charcoalSoft">PIN: <span class="demo-pin-mask font-mono font-bold" data-role="finance">&bull;&bull;&bull;&bull;</span> &bull; Invoice &amp; Laba</span>
                                 </div>
                             </button>
                             <button type="button" onclick="demoLoginStaff('production')" class="p-3 rounded-xl bg-white hover:border-champagne border border-charcoal/15 text-left transition-all flex items-center gap-3">
                                 <span class="w-9 h-9 rounded-lg bg-amber-700 text-white flex items-center justify-center"><i class="fa-solid fa-camera"></i></span>
                                 <div>
                                     <span class="text-xs font-bold block text-charcoal">Tim Produksi / Kru</span>
-                                    <span class="text-[11px] text-charcoalSoft">PIN: <span class="demo-pin-mask font-mono font-bold" data-role="production">••••</span> • Divisi &amp; SOP</span>
+                                    <span class="text-[11px] text-charcoalSoft">PIN: <span class="demo-pin-mask font-mono font-bold" data-role="production">&bull;&bull;&bull;&bull;</span> &bull; Divisi &amp; SOP</span>
                                 </div>
                             </button>
                         </div>
@@ -539,14 +548,19 @@
     <!-- ===================================================================== -->
     <!-- INVOICE MODAL                                                         -->
     <!-- ===================================================================== -->
-    <div id="invoice-modal" class="hidden fixed inset-0 z-[105] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div id="printable-invoice" class="bg-white w-full max-w-2xl rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto"></div>
+    <div id="invoice-modal" class="hidden fixed inset-0 z-[105] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onclick="document.getElementById('invoice-modal').classList.add('hidden')">
+        <div id="printable-invoice" class="bg-white w-full max-w-2xl rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()"></div>
     </div>
 
     <!-- ===================================================================== -->
     <!-- JAVASCRIPT APPLICATION ENGINE                                         -->
     <!-- ===================================================================== -->
     <script>
+        /**
+         * Oloris Picture Application Engine
+         * Manages storefront state, client progress tracking, photo selection,
+         * role-based ERP & CMS workflows, visual builder, and localStorage persistence.
+         */
         const STORAGE_KEY = 'oloris_picture_unified_db_v5';
 
         const PROCESS_STAGES = [
@@ -554,7 +568,7 @@
             { step: 2, title: 'Sesi Pemotretan Selesai', desc: 'Backup RAW aman di server.' },
             { step: 3, title: 'Seleksi & Upload Preview Drive', desc: 'Folder Preview siap ditinjau.' },
             { step: 4, title: 'Klien Memilih Kode File Favorit', desc: 'Input nama file via portal.' },
-            { step: 5, title: 'Color Grading & Retouching', desc: 'Proses editing fine-art TIARE.' },
+            { step: 5, title: 'Color Grading & Retouching', desc: 'Proses editing fine-art Oloris Picture.' },
             { step: 6, title: 'Final Google Drive & Cetak Siap', desc: 'Seluruh file HD siap diunduh.' }
         ];
 
@@ -744,6 +758,9 @@
             bookingSettings: {
                 dpPercentage: 30,
                 codePrefix: 'OLR',
+                bankName: 'Bank Central Asia (BCA)',
+                bankAccountNumber: '8820918472',
+                bankAccountHolder: 'OLORIS PICTURE STUDIO',
                 googleDriveMasterUrl: 'https://drive.google.com/drive/folders/1OLORIS_PICTURE_STUDIO_MASTER',
                 googleCalendarEmail: 'freelanceoloris@gmail.com',
                 calendarEventPrefix: '[OLORIS PICTURE]',
@@ -752,7 +769,7 @@
             privacySettings: {
                 isPrivateSite: false,
                 sitePasscode: 'OLORIS2026',
-                hideDemoButtons: true,
+                hideDemoButtons: false,
                 privateHeadline: 'Akses Terbatas Klien & Tim Oloris Picture',
                 privateMessage: 'Website & portofolio Oloris Picture bersifat privat. Masukkan kata sandi akses tamu atau login menggunakan PIN Super Admin.'
             },
@@ -908,8 +925,12 @@
             ]
         };
 
+        // Application Runtime State
         let db = loadDatabase();
         let activeMainView = 'landing';
+        let activePublicPage = 'home'; // 'home' | 'packages' | 'booking'
+        let selectedBookingPackageName = '';
+        let selectedBookingLocation = '';
         let activeClientCode = 'WED-2026';
         let activeStaffUser = null;
         let isSuperAdminAuthenticated = false;
@@ -928,35 +949,98 @@
         let editingCrewId = null;
         let pendingTargetRole = null;
 
+        /**
+         * Loads and normalizes database from localStorage with defensive fallbacks.
+         */
+        function normalizeDatabaseShape(parsed) {
+            // Safely merge nested config and ensure core collections are valid arrays
+            const base = JSON.parse(JSON.stringify(DEFAULT_DB));
+            if (!parsed || typeof parsed !== 'object') return base;
+
+            const mergedConfig = {
+                ...JSON.parse(JSON.stringify(DEFAULT_SITE_CONFIG)),
+                ...(parsed.siteConfig && typeof parsed.siteConfig === 'object' ? parsed.siteConfig : {})
+            };
+            mergedConfig.theme = {
+                ...DEFAULT_SITE_CONFIG.theme,
+                ...(mergedConfig.theme && typeof mergedConfig.theme === 'object' ? mergedConfig.theme : {})
+            };
+            mergedConfig.bookingSettings = {
+                ...DEFAULT_SITE_CONFIG.bookingSettings,
+                ...(mergedConfig.bookingSettings && typeof mergedConfig.bookingSettings === 'object' ? mergedConfig.bookingSettings : {})
+            };
+            mergedConfig.privacySettings = {
+                ...DEFAULT_SITE_CONFIG.privacySettings,
+                ...(mergedConfig.privacySettings && typeof mergedConfig.privacySettings === 'object' ? mergedConfig.privacySettings : {})
+            };
+
+            const normalizedStaff = Array.isArray(parsed.staff)
+                ? parsed.staff.map(s => ({
+                    division: s.role === 'production' ? 'Tim Foto' : (s.role === 'admin' ? 'Koordinator Lapangan' : 'Manajemen'),
+                    location: 'Surabaya & Sekitarnya',
+                    phone: '081234567890',
+                    jobDesk: 'Bertanggung jawab menjalankan standar pelayanan dan produksi studio sesuai divisi.',
+                    sop: '1. Koordinasi jadwal H-2.\n2. Laporan hasil kerja & backup data tepat waktu.',
+                    ...s
+                }))
+                : base.staff;
+
+            const normalizedProjects = Array.isArray(parsed.projects)
+                ? parsed.projects.map(p => ({
+                    ...p,
+                    stage: Number.isFinite(Number(p.stage)) ? Number(p.stage) : 1,
+                    totalAmount: Number.isFinite(Number(p.totalAmount)) ? Number(p.totalAmount) : 0,
+                    paidAmount: Number.isFinite(Number(p.paidAmount)) ? Number(p.paidAmount) : 0,
+                    driveLinks: {
+                        rawPreview: '',
+                        finalEdited: '',
+                        videoTeaser: '',
+                        ...(p.driveLinks && typeof p.driveLinks === 'object' ? p.driveLinks : {})
+                    },
+                    photoSelection: {
+                        quota: 100,
+                        selectedFilenamesText: '',
+                        revisionNote: '',
+                        submittedAt: '',
+                        status: 'Sudah Booking',
+                        ...(p.photoSelection && typeof p.photoSelection === 'object' ? p.photoSelection : {})
+                    },
+                    crew: {
+                        leadPhotographer: 'Belum Ditugaskan',
+                        secondPhotographer: 'Belum Ditugaskan',
+                        editor: 'Belum Ditugaskan',
+                        taskStatus: 'Terjadwal',
+                        ...(p.crew && typeof p.crew === 'object' ? p.crew : {})
+                    },
+                    expenses: Array.isArray(p.expenses) ? p.expenses : []
+                }))
+                : base.projects;
+
+            const normalizedLogs = Array.isArray(parsed.auditLogs) ? parsed.auditLogs : base.auditLogs;
+
+            return {
+                siteConfig: mergedConfig,
+                staff: normalizedStaff,
+                projects: normalizedProjects,
+                auditLogs: normalizedLogs
+            };
+        }
+
         function loadDatabase() {
             try {
                 const raw = localStorage.getItem(STORAGE_KEY);
                 if (!raw) return JSON.parse(JSON.stringify(DEFAULT_DB));
                 const parsed = JSON.parse(raw);
-                parsed.siteConfig = { ...JSON.parse(JSON.stringify(DEFAULT_SITE_CONFIG)), ...(parsed.siteConfig || {}) };
-                parsed.siteConfig.theme = { ...DEFAULT_SITE_CONFIG.theme, ...(parsed.siteConfig.theme || {}) };
-                parsed.siteConfig.bookingSettings = { ...DEFAULT_SITE_CONFIG.bookingSettings, ...(parsed.siteConfig.bookingSettings || {}) };
-                parsed.siteConfig.privacySettings = { ...DEFAULT_SITE_CONFIG.privacySettings, ...(parsed.siteConfig.privacySettings || {}) };
-                if (Array.isArray(parsed.staff)) {
-                    parsed.staff = parsed.staff.map(s => ({
-                        division: s.role === 'production' ? 'Tim Foto' : (s.role === 'admin' ? 'Koordinator Lapangan' : 'Manajemen'),
-                        location: 'Surabaya & Sekitarnya',
-                        phone: '081234567890',
-                        jobDesk: 'Bertanggung jawab menjalankan standar pelayanan dan produksi studio sesuai divisi.',
-                        sop: '1. Koordinasi jadwal H-2.\n2. Laporan hasil kerja & backup data tepat waktu.',
-                        ...s
-                    }));
-                } else {
-                    parsed.staff = JSON.parse(JSON.stringify(DEFAULT_DB.staff));
-                }
-                if (!Array.isArray(parsed.projects)) parsed.projects = JSON.parse(JSON.stringify(DEFAULT_DB.projects));
-                if (!Array.isArray(parsed.auditLogs)) parsed.auditLogs = JSON.parse(JSON.stringify(DEFAULT_DB.auditLogs));
-                return parsed;
+                return normalizeDatabaseShape(parsed);
             } catch (err) {
+                console.warn('Database fallback triggered:', err);
                 return JSON.parse(JSON.stringify(DEFAULT_DB));
             }
         }
 
+        /**
+         * Persists state changes to localStorage and optionally pushes to Apps Script webhook.
+         */
         function saveDatabase(actor = '', action = '') {
             if (actor && action) {
                 const now = new Date();
@@ -1000,14 +1084,16 @@
             try {
                 const res = await fetch(url + (url.includes('?') ? '&' : '?') + 'action=sync_down');
                 const data = await res.json();
-                if (data && data.projects && data.siteConfig) {
-                    db = data;
+                if (data && typeof data === 'object' && (Array.isArray(data.projects) || (data.siteConfig && typeof data.siteConfig === 'object'))) {
+                    db = normalizeDatabaseShape(data);
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
                     applySiteThemeAndHeader();
                     if (activeMainView === 'landing') renderLandingSections();
                     if (activeMainView === 'client') renderClientPortal();
                     if (activeMainView === 'admin') renderAdminPortal();
                     if (!silent) showToast('Data terbaru berhasil ditarik dari Google Cloud!');
+                } else if (!silent) {
+                    showToast('Format data dari Cloud tidak lengkap.', 'error');
                 }
             } catch (e) {
                 if (!silent) showToast('Gagal menarik data cloud. Periksa URL Web App.', 'error');
@@ -1030,6 +1116,9 @@
             setTimeout(() => { el.remove(); }, 3500);
         }
 
+        /**
+         * Applies CSS custom properties, brand header/footer text, privacy lock, and builder visibility.
+         */
         function applySiteThemeAndHeader() {
             const cfg = db.siteConfig;
             const t = cfg.theme || DEFAULT_SITE_CONFIG.theme;
@@ -1057,7 +1146,6 @@
             setText('header-cart-count', countStr);
             setText('mobile-cart-count', countStr);
 
-            // Web Builder hanya tampil & aktif jika Super Admin terautentikasi dan sesi builder belum dikunci
             const canUseBuilder = Boolean(
                 isSuperAdminAuthenticated &&
                 isBuilderUnlockedInSession &&
@@ -1078,7 +1166,6 @@
                 loginLabel.textContent = activeStaffUser ? `${activeStaffUser.name} (${activeStaffUser.roleLabel})` : 'Log In';
             }
 
-            // Enforce Website Privacy Gate if enabled
             const priv = cfg.privacySettings || DEFAULT_SITE_CONFIG.privacySettings;
             const isLocked = priv.isPrivateSite && !isPrivateSiteUnlocked && !canUseBuilder;
             document.getElementById('private-site-gate')?.classList.toggle('hidden', !isLocked);
@@ -1100,6 +1187,7 @@
             if (superAdminUser) {
                 activeStaffUser = superAdminUser;
                 isSuperAdminAuthenticated = true;
+                isBuilderUnlockedInSession = true;
                 isPrivateSiteUnlocked = true;
                 if (inp) inp.value = '';
                 applySiteThemeAndHeader();
@@ -1123,6 +1211,7 @@
             activeStaffUser = null;
             isSuperAdminAuthenticated = false;
             isBuilderUnlockedInSession = false;
+            pendingTargetRole = null;
             if (isVisualBuilderOpen) toggleVisualBuilder(false);
             applySiteThemeAndHeader();
             switchMainView('landing');
@@ -1168,34 +1257,165 @@
         }
 
         function focusHeroSearch() {
-            const el = document.getElementById('hero-search-keyword');
-            if (el) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                el.focus();
+            if (activePublicPage !== 'home') {
+                openPublicPage('home');
+            }
+            setTimeout(() => {
+                const el = document.getElementById('hero-search-keyword');
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    el.focus();
+                }
+            }, 80);
+        }
+
+        /**
+         * Updates active underline styling in desktop & mobile storefront navigation.
+         */
+        function updatePublicNavActiveState() {
+            document.querySelectorAll('#desktop-main-nav [data-nav-page]').forEach(link => {
+                const page = link.dataset.navPage;
+                const isActive = page === activePublicPage;
+                link.classList.toggle('border-champagne', isActive);
+                link.classList.toggle('text-champagneDark', isActive);
+                link.classList.toggle('border-transparent', !isActive);
+            });
+            document.querySelectorAll('#mobile-nav-drawer [data-mobile-page]').forEach(link => {
+                const page = link.dataset.mobilePage;
+                const isActive = page === activePublicPage;
+                link.classList.toggle('text-champagneDark', isActive);
+                link.classList.toggle('font-semibold', isActive);
+                link.classList.toggle('text-charcoal', !isActive);
+            });
+        }
+
+        /**
+         * Switches between separate storefront pages:
+         * - 'home': Main dashboard (Hero, Press, Showcase, Gallery + quick menu cards)
+         * - 'packages': Dedicated Packages & Pricelist page
+         * - 'booking': Dedicated Booking & Google Drive Sync page
+         */
+        function openPublicPage(page, anchorId = '') {
+            activePublicPage = page;
+            if (activeMainView !== 'landing') {
+                switchMainView('landing');
+            } else {
+                renderLandingSections();
+            }
+            updatePublicNavActiveState();
+
+            if (anchorId) {
+                setTimeout(() => {
+                    document.getElementById(anchorId)?.scrollIntoView({ behavior: 'smooth' });
+                }, 60);
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
 
+        function scrollToContactFooter(e) {
+            if (e) e.preventDefault();
+            document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+        }
+
         // =====================================================================
-        // RENDER STOREFRONT SECTIONS (TIARE EDITORIAL)
+        // RENDER STOREFRONT SECTIONS (SEPARATE HOME, PRICELIST & BOOKING MENUS)
         // =====================================================================
         function renderLandingSections() {
             const container = document.getElementById('landing-sections-container');
             if (!container) return;
             const cfg = db.siteConfig;
             const sections = cfg.sectionsOrder || DEFAULT_SITE_CONFIG.sectionsOrder;
+            updatePublicNavActiveState();
 
+            // Dedicated Menu 1: Packages & Pricelist
+            if (activePublicPage === 'packages') {
+                container.innerHTML = `
+                    <div class="bg-ivoryWarm border-b border-charcoal/10">
+                        <div class="max-w-6xl mx-auto px-4 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-3 text-xs">
+                            <button type="button" onclick="openPublicPage('home')" class="inline-flex items-center gap-2 text-charcoal hover:text-champagneDark font-semibold uppercase tracking-wider">
+                                <i class="fa-solid fa-arrow-left text-champagne"></i> Kembali ke Beranda Utama
+                            </button>
+                            <div class="flex items-center gap-3">
+                                <span class="text-charcoalSoft">Menu Khusus: <strong class="text-charcoal">Packages &amp; Pricelist</strong></span>
+                                <button type="button" onclick="openPublicPage('booking')" class="px-4 py-2 bg-champagne hover:bg-champagneDark text-white font-semibold uppercase tracking-wider">
+                                    Ke Menu Booking <i class="fa-solid fa-arrow-right ml-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    ${buildPackagesSectionHTML(cfg)}
+                `;
+                return;
+            }
+
+            // Dedicated Menu 2: Booking & Google Drive Sync
+            if (activePublicPage === 'booking') {
+                container.innerHTML = `
+                    <div class="bg-white border-b border-charcoal/10">
+                        <div class="max-w-5xl mx-auto px-4 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-3 text-xs">
+                            <button type="button" onclick="openPublicPage('home')" class="inline-flex items-center gap-2 text-charcoal hover:text-champagneDark font-semibold uppercase tracking-wider">
+                                <i class="fa-solid fa-arrow-left text-champagne"></i> Kembali ke Beranda Utama
+                            </button>
+                            <div class="flex items-center gap-3">
+                                <span class="text-charcoalSoft">Menu Khusus: <strong class="text-charcoal">Booking &amp; Reservasi</strong></span>
+                                <button type="button" onclick="openPublicPage('packages')" class="px-4 py-2 bg-ivory border border-charcoal/20 hover:border-champagne text-charcoal font-semibold uppercase tracking-wider">
+                                    Lihat Pricelist Paket
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    ${buildUnifiedBookingSectionHTML(cfg)}
+                `;
+                const sel = document.getElementById('booking-package-select');
+                if (sel && selectedBookingPackageName) {
+                    sel.value = selectedBookingPackageName;
+                }
+                const locInp = document.getElementById('booking-location');
+                if (locInp && selectedBookingLocation) {
+                    locInp.value = selectedBookingLocation;
+                }
+                recalculateBookingTotal();
+                return;
+            }
+
+            // Main Dashboard ('home'): Only editorial sections (Pricelist & Booking are hidden here and placed in their own menus)
             let html = '';
             sections.forEach(sec => {
                 if (!sec.visible) return;
                 if (sec.id === 'hero') html += buildHeroSectionHTML(cfg);
                 else if (sec.id === 'press') html += buildPressSectionHTML(cfg);
                 else if (sec.id === 'showcase') html += buildShowcaseSectionHTML(cfg);
-                else if (sec.id === 'packages') html += buildPackagesSectionHTML(cfg);
                 else if (sec.id === 'gallery') html += buildGallerySectionHTML(cfg);
-                else if (sec.id === 'booking') html += buildUnifiedBookingSectionHTML(cfg);
             });
+
+            html += `
+                <section class="bg-white border-t border-charcoal/10 py-16">
+                    <div class="max-w-5xl mx-auto px-4 sm:px-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-8 bg-ivory border border-champagne/30 luxury-card flex flex-col justify-between space-y-4">
+                            <div class="space-y-2">
+                                <span class="text-[10px] uppercase tracking-[0.28em] text-champagne font-bold">Menu Khusus Paket</span>
+                                <h3 class="font-serif text-3xl text-charcoal">Packages &amp; Pricelist</h3>
+                                <p class="text-xs text-charcoalSoft leading-relaxed">Lihat daftar lengkap paket Prewedding Editorial &amp; Wedding Day Liputan beserta rincian fasilitas di halaman khusus.</p>
+                            </div>
+                            <button type="button" onclick="openPublicPage('packages')" class="self-start px-6 py-3 bg-charcoal hover:bg-champagne text-white text-xs font-semibold uppercase tracking-[0.2em] transition-colors">
+                                Buka Menu Pricelist <i class="fa-solid fa-arrow-right ml-1.5"></i>
+                            </button>
+                        </div>
+                        <div class="p-8 bg-ivory border border-champagne/30 luxury-card flex flex-col justify-between space-y-4">
+                            <div class="space-y-2">
+                                <span class="text-[10px] uppercase tracking-[0.28em] text-champagne font-bold">Menu Khusus Reservasi</span>
+                                <h3 class="font-serif text-3xl text-charcoal">Booking &amp; Google Drive Sync</h3>
+                                <p class="text-xs text-charcoalSoft leading-relaxed">Isi formulir reservasi jadwal pemotretan, pilih add-ons, dan dapatkan Kode Lacak Klien otomatis.</p>
+                            </div>
+                            <button type="button" onclick="openPublicPage('booking')" class="self-start px-6 py-3 bg-champagne hover:bg-champagneDark text-white text-xs font-semibold uppercase tracking-[0.2em] transition-colors">
+                                Buka Menu Booking <i class="fa-solid fa-arrow-right ml-1.5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            `;
             container.innerHTML = html;
-            recalculateBookingTotal();
         }
 
         function buildHeroSectionHTML(cfg) {
@@ -1205,54 +1425,48 @@
 
             return `
                 <section id="top-hero" onmouseenter="pauseHeroAutoplay()" onmouseleave="startHeroAutoplay()" ontouchstart="handleHeroTouchStart(event)" ontouchend="handleHeroTouchEnd(event)" class="relative w-full h-[600px] sm:h-[700px] bg-charcoal overflow-hidden flex items-center justify-center">
-                    <!-- Crossfade Stacked Animated Photo Slides -->
                     ${slides.map((s, idx) => {
                         const isActive = idx === currentHeroSlideIndex;
                         return `
-                            <div class="absolute inset-0 transition-opacity duration-1000 ease-in-out ${isActive ? 'opacity-100 z-0' : 'opacity-0 -z-10 pointer-events-none'}">
-                                <img src="${s.image}" alt="${s.title}" class="hero-kenburns w-full h-full object-cover opacity-85" onerror="this.src='https://placehold.co/1600x900/2b2620/ffffff?text=TIARE+Editorial'">
+                            <div data-hero-slide="${idx}" class="absolute inset-0 transition-opacity duration-1000 ease-in-out ${isActive ? 'opacity-100 z-0' : 'opacity-0 -z-10 pointer-events-none'}">
+                                <img src="${s.image}" alt="${s.title}" class="hero-kenburns w-full h-full object-cover opacity-85" onerror="this.src='https://placehold.co/1600x900/2b2620/ffffff?text=OLORIS+PICTURE'">
                             </div>
                         `;
                     }).join('')}
 
                     <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60 z-[1]"></div>
 
-                    <!-- Subtle Floating Golden Ambient Lights -->
                     <div class="pointer-events-none absolute inset-0 z-[2] overflow-hidden">
                         <span class="ambient-spark absolute top-1/4 left-1/4 w-2 h-2 rounded-full bg-champagneLight blur-[1px]"></span>
                         <span class="ambient-spark absolute top-1/3 right-1/4 w-1.5 h-1.5 rounded-full bg-white blur-[1px]" style="animation-delay: 1.8s;"></span>
                         <span class="ambient-spark absolute bottom-1/3 left-1/3 w-2.5 h-2.5 rounded-full bg-champagneLight/80 blur-[2px]" style="animation-delay: 3.2s;"></span>
                     </div>
 
-                    <!-- Subtle Inner Editorial Frame -->
                     <div class="pointer-events-none absolute inset-4 sm:inset-7 border border-white/25 z-10"></div>
 
-                    <!-- Left & Right Editorial Slide Controls -->
                     <button type="button" onclick="changeHeroSlide(-1)" class="hidden sm:flex absolute left-10 z-20 items-center gap-2.5 text-white/85 hover:text-white text-xs tracking-[0.25em] group">
                         <span class="w-10 h-10 rounded-full border border-white/35 bg-black/15 backdrop-blur-sm group-hover:border-white group-hover:bg-champagne/80 flex items-center justify-center transition-all"><i class="fa-solid fa-chevron-left text-xs"></i></span>
-                        <span>0${currentHeroSlideIndex + 1} / 0${slides.length}</span>
+                        <span data-hero-counter>0${currentHeroSlideIndex + 1} / 0${slides.length}</span>
                     </button>
                     <button type="button" onclick="changeHeroSlide(1)" class="hidden sm:flex absolute right-10 z-20 items-center gap-2.5 text-white/85 hover:text-white text-xs tracking-[0.25em] group">
-                        <span>0${currentHeroSlideIndex + 1} / 0${slides.length}</span>
+                        <span data-hero-counter>0${currentHeroSlideIndex + 1} / 0${slides.length}</span>
                         <span class="w-10 h-10 rounded-full border border-white/35 bg-black/15 backdrop-blur-sm group-hover:border-white group-hover:bg-champagne/80 flex items-center justify-center transition-all"><i class="fa-solid fa-chevron-right text-xs"></i></span>
                     </button>
 
-                    <!-- Center Editorial Headline & Frosted Floating Search Bar -->
-                    <div key="hero-content-${currentHeroSlideIndex}" class="relative z-20 max-w-4xl w-full mx-auto px-6 text-center text-white space-y-5">
+                    <div class="relative z-20 max-w-4xl w-full mx-auto px-6 text-center text-white space-y-5">
                         <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[10px] uppercase tracking-[0.34em] text-champagneLight font-medium">
                             <span class="w-1.5 h-1.5 rounded-full bg-champagneLight animate-pulse"></span>
                             <span>Fine-Art Wedding &amp; Editorial House</span>
                         </div>
-                        <h1 class="hero-title-animate font-serif text-4xl sm:text-6xl md:text-[68px] font-normal uppercase tracking-[0.26em] leading-[1.1] drop-shadow-sm">
+                        <h1 id="hero-slide-title" class="hero-title-animate font-serif text-4xl sm:text-6xl md:text-[68px] font-normal uppercase tracking-[0.26em] leading-[1.1] drop-shadow-sm">
                             ${slide.title}
                         </h1>
                         <div class="flex items-center justify-center gap-4 text-white/95 fade-in">
                             <span class="w-12 sm:w-20 h-[1px] bg-gradient-to-r from-transparent to-white/80"></span>
-                            <p class="font-serif italic text-lg sm:text-2xl tracking-wide">${slide.subtitle}</p>
+                            <p id="hero-slide-subtitle" class="font-serif italic text-lg sm:text-2xl tracking-wide">${slide.subtitle}</p>
                             <span class="w-12 sm:w-20 h-[1px] bg-gradient-to-l from-transparent to-white/80"></span>
                         </div>
 
-                        <!-- TIARE Luxury Frosted Search / Filter Bar -->
                         <form onsubmit="handleHeroSearchSubmit(event)" class="mt-9 p-2 bg-white/20 backdrop-blur-md border border-white/30 max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-12 gap-2 shadow-2xl">
                             <div class="sm:col-span-3">
                                 <input type="text" id="hero-search-keyword" placeholder="Key word" class="w-full h-11 px-4 bg-white/95 text-charcoal text-xs placeholder:text-charcoalSoft focus:outline-none">
@@ -1277,17 +1491,16 @@
                         </form>
                     </div>
 
-                    <!-- Bottom Interactive Slide Dots & Autoplay Progress Bar -->
                     <div class="absolute bottom-7 inset-x-0 z-20 flex flex-col items-center gap-3">
                         <div class="flex items-center gap-2.5">
                             ${slides.map((s, idx) => `
-                                <button type="button" onclick="goToHeroSlide(${idx})" aria-label="Slide ${idx + 1}" class="h-2 rounded-full transition-all duration-300 ${
+                                <button type="button" onclick="goToHeroSlide(${idx})" data-hero-dot="${idx}" aria-label="Slide ${idx + 1}" class="h-2 rounded-full transition-all duration-300 ${
                                     idx === currentHeroSlideIndex ? 'w-8 bg-champagneLight' : 'w-2 bg-white/45 hover:bg-white/80'
                                 }"></button>
                             `).join('')}
                         </div>
                         <div class="w-36 h-[2px] bg-white/20 overflow-hidden rounded-full">
-                            <div key="prog-${currentHeroSlideIndex}" class="hero-progress-bar h-full bg-champagneLight"></div>
+                            <div id="hero-progress-fill" class="hero-progress-bar h-full bg-champagneLight"></div>
                         </div>
                     </div>
                 </section>
@@ -1305,17 +1518,67 @@
             }
         }
 
+        /**
+         * Updates only the hero slide DOM elements without re-rendering #landing-sections-container,
+         * preserving user input inside the booking form and search bar during autoplay transitions.
+         */
+        function syncHeroSlideDOM() {
+            const slides = db.siteConfig.heroSlides || DEFAULT_SITE_CONFIG.heroSlides;
+            if (!slides.length) return;
+            if (currentHeroSlideIndex >= slides.length) currentHeroSlideIndex = 0;
+            const slide = slides[currentHeroSlideIndex];
+
+            document.querySelectorAll('[data-hero-slide]').forEach((el, idx) => {
+                const isActive = idx === currentHeroSlideIndex;
+                el.classList.toggle('opacity-100', isActive);
+                el.classList.toggle('z-0', isActive);
+                el.classList.toggle('opacity-0', !isActive);
+                el.classList.toggle('-z-10', !isActive);
+                el.classList.toggle('pointer-events-none', !isActive);
+            });
+
+            const titleEl = document.getElementById('hero-slide-title');
+            if (titleEl) {
+                titleEl.textContent = slide.title;
+                titleEl.classList.remove('hero-title-animate');
+                void titleEl.offsetWidth;
+                titleEl.classList.add('hero-title-animate');
+            }
+
+            const subEl = document.getElementById('hero-slide-subtitle');
+            if (subEl) subEl.textContent = slide.subtitle;
+
+            document.querySelectorAll('[data-hero-counter]').forEach(el => {
+                el.textContent = `0${currentHeroSlideIndex + 1} / 0${slides.length}`;
+            });
+
+            document.querySelectorAll('[data-hero-dot]').forEach((el, idx) => {
+                const isActive = idx === currentHeroSlideIndex;
+                el.classList.toggle('w-8', isActive);
+                el.classList.toggle('bg-champagneLight', isActive);
+                el.classList.toggle('w-2', !isActive);
+                el.classList.toggle('bg-white/45', !isActive);
+            });
+
+            const progEl = document.getElementById('hero-progress-fill');
+            if (progEl) {
+                progEl.classList.remove('hero-progress-bar');
+                void progEl.offsetWidth;
+                progEl.classList.add('hero-progress-bar');
+            }
+        }
+
         function goToHeroSlide(index) {
             const slides = db.siteConfig.heroSlides || DEFAULT_SITE_CONFIG.heroSlides;
             currentHeroSlideIndex = (index + slides.length) % slides.length;
-            renderLandingSections();
+            syncHeroSlideDOM();
             startHeroAutoplay();
         }
 
         function changeHeroSlide(dir) {
             const slides = db.siteConfig.heroSlides || DEFAULT_SITE_CONFIG.heroSlides;
             currentHeroSlideIndex = (currentHeroSlideIndex + dir + slides.length) % slides.length;
-            renderLandingSections();
+            syncHeroSlideDOM();
             startHeroAutoplay();
         }
 
@@ -1325,7 +1588,7 @@
                 if (activeMainView === 'landing' && !isVisualBuilderOpen) {
                     const slides = db.siteConfig.heroSlides || DEFAULT_SITE_CONFIG.heroSlides;
                     currentHeroSlideIndex = (currentHeroSlideIndex + 1) % slides.length;
-                    renderLandingSections();
+                    syncHeroSlideDOM();
                 }
             }, 6000);
         }
@@ -1343,17 +1606,13 @@
             const vendorPkg = document.getElementById('hero-search-vendor')?.value || '';
             const location = document.getElementById('hero-search-location')?.value || '';
 
-            if (vendorPkg) {
-                choosePackageForBooking(vendorPkg);
-            }
-            const locInput = document.getElementById('booking-location');
-            if (locInput && location) locInput.value = location;
+            if (vendorPkg) selectedBookingPackageName = vendorPkg;
+            if (location) selectedBookingLocation = location;
 
-            const bookingSec = document.getElementById('booking');
-            if (bookingSec) bookingSec.scrollIntoView({ behavior: 'smooth' });
+            openPublicPage('booking');
             showToast(keyword || vendorPkg || location
                 ? `Filter diterapkan: ${[keyword, vendorPkg, location].filter(Boolean).join(' • ')}`
-                : 'Menampilkan seluruh koleksi & jadwal tersedia');
+                : 'Membuka menu khusus Booking & Reservasi');
         }
 
         function buildPressSectionHTML(cfg) {
@@ -1427,9 +1686,8 @@
         function selectShowcaseCategory(catId) {
             if (db.siteConfig.packageCategories.some(c => c.id === catId)) {
                 activeLandingPkgCategory = catId;
-                renderLandingSections();
             }
-            document.getElementById('packages')?.scrollIntoView({ behavior: 'smooth' });
+            openPublicPage('packages');
         }
 
         function buildPackagesSectionHTML(cfg) {
@@ -1480,7 +1738,7 @@
                                             `).join('')}
                                         </ul>
                                     </div>
-                                    <button type="button" onclick="choosePackageForBooking('${pkg.name}')" class="w-full py-3.5 bg-charcoal hover:bg-champagne text-white text-xs uppercase tracking-[0.22em] font-semibold transition-colors">
+                                    <button type="button" onclick="choosePackageForBooking('${pkg.name.replace(/'/g, "\\'")}')" class="w-full py-3.5 bg-charcoal hover:bg-champagne text-white text-xs uppercase tracking-[0.22em] font-semibold transition-colors">
                                         Pilih Paket &amp; Jadwalkan
                                     </button>
                                 </div>
@@ -1492,13 +1750,9 @@
         }
 
         function choosePackageForBooking(pkgName) {
-            const sel = document.getElementById('booking-package-select');
-            if (sel) {
-                sel.value = pkgName;
-                recalculateBookingTotal();
-            }
-            document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth' });
-            showToast(`Paket "${pkgName}" dipilih.`);
+            selectedBookingPackageName = pkgName;
+            openPublicPage('booking');
+            showToast(`Paket "${pkgName}" dipilih di menu Booking.`);
         }
 
         function buildGallerySectionHTML(cfg) {
@@ -1513,9 +1767,9 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         ${items.map((item, idx) => `
-                            <div onclick="openLightbox('${item.image}', '${item.title.replace(/'/g, "\\'")}', '${item.category}', '${item.location.replace(/'/g, "\\'")}')" class="group cursor-pointer overflow-hidden bg-white border border-charcoal/10 luxury-card ${idx % 2 === 1 ? 'sm:translate-y-4' : ''}">
+                            <div onclick="openLightbox('${item.image}', '${item.title.replace(/'/g, "\\'")}', '${item.category.replace(/'/g, "\\'")}', '${item.location.replace(/'/g, "\\'")}')" class="group cursor-pointer overflow-hidden bg-white border border-charcoal/10 luxury-card ${idx % 2 === 1 ? 'sm:translate-y-4' : ''}">
                                 <div class="aspect-[3/4] overflow-hidden">
-                                    <img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onerror="this.src='https://placehold.co/600x800/EFE9DE/1E1E1E?text=TIARE+Gallery'">
+                                    <img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onerror="this.src='https://placehold.co/600x800/EFE9DE/1E1E1E?text=Oloris+Gallery'">
                                 </div>
                                 <div class="p-4 text-center">
                                     <span class="text-[10px] uppercase tracking-[0.22em] text-champagne font-semibold block">${item.category}</span>
@@ -1588,7 +1842,7 @@
                                             <i class="fa-brands fa-google-drive text-champagne mr-1"></i> Link Folder Google Drive Referensi / Moodboard (Opsional)
                                         </label>
                                         <div class="flex flex-col sm:flex-row gap-2">
-                                            <input type="url" id="booking-drive-url" placeholder="Tempel link Google Drive Anda atau biarkan kosong untuk dibuatkan otomatis oleh studio" class="flex-1 px-4 py-3 bg-ivory border border-charcoal/15 focus:outline-none focus:border-champagne">
+                                            <input type="text" id="booking-drive-url" placeholder="Tempel link Google Drive Anda atau biarkan kosong untuk dibuatkan otomatis oleh studio" class="flex-1 px-4 py-3 bg-ivory border border-charcoal/15 focus:outline-none focus:border-champagne">
                                             <a href="${bSet.googleDriveMasterUrl}" target="_blank" rel="noopener" class="px-4 py-3 bg-ivoryWarm border border-charcoal/15 text-charcoal font-semibold uppercase tracking-wider text-[11px] flex items-center justify-center gap-2 hover:border-champagne">
                                                 <i class="fa-brands fa-google-drive text-champagne"></i> Drive Studio
                                             </a>
@@ -1625,6 +1879,53 @@
                                                 <span class="font-semibold text-champagneDark">+${formatRupiah(a.price)}</span>
                                             </label>
                                         `).join('')}
+                                    </div>
+                                </div>
+
+                                <!-- Informasi Rekening Resmi & Upload Bukti Transfer DP -->
+                                <div class="pt-4 border-t border-charcoal/10 grid grid-cols-1 lg:grid-cols-12 gap-5 text-xs">
+                                    <div class="lg:col-span-6 p-5 bg-ivoryWarm border border-champagne/40 space-y-3 flex flex-col justify-between">
+                                        <div class="space-y-1.5">
+                                            <span class="text-[10px] uppercase tracking-[0.22em] text-champagneDark font-bold block">
+                                                <i class="fa-solid fa-building-columns mr-1"></i> Rekening Pembayaran Resmi Studio
+                                            </span>
+                                            <h4 class="font-serif text-xl text-charcoal font-semibold">${bSet.bankName || 'Bank Central Asia (BCA)'}</h4>
+                                            <div class="p-3 bg-white border border-charcoal/15 flex items-center justify-between gap-2">
+                                                <div>
+                                                    <span class="text-[10px] text-charcoalSoft block">Nomor Rekening</span>
+                                                    <strong id="booking-bank-acc-text" class="font-mono text-base tracking-wider text-charcoal">${bSet.bankAccountNumber || '8820918472'}</strong>
+                                                </div>
+                                                <button type="button" onclick="copyBookingBankAccount()" class="px-3 py-1.5 bg-charcoal hover:bg-champagne text-white text-[11px] font-semibold uppercase tracking-wider transition-colors">
+                                                    <i class="fa-regular fa-copy mr-1"></i> Salin
+                                                </button>
+                                            </div>
+                                            <p class="text-[11px] text-charcoalSoft pt-0.5">Atas Nama: <strong class="text-charcoal">${bSet.bankAccountHolder || 'OLORIS PICTURE STUDIO'}</strong></p>
+                                        </div>
+                                        <p class="text-[11px] text-charcoalSoft leading-relaxed border-t border-charcoal/10 pt-2.5">
+                                            Silakan transfer minimal sesuai nominal <strong>Estimasi DP (${bSet.dpPercentage}%)</strong> di bawah untuk mengunci tanggal pemotretan Anda.
+                                        </p>
+                                    </div>
+
+                                    <div class="lg:col-span-6 p-5 bg-ivory border border-charcoal/15 space-y-3">
+                                        <label class="block font-semibold uppercase tracking-wider text-charcoalSoft">
+                                            <i class="fa-solid fa-receipt text-champagne mr-1"></i> Upload Foto Bukti Transfer DP (Opsional / Jika Sudah Transfer)
+                                        </label>
+                                        <input type="file" id="booking-transfer-file" accept="image/*" onchange="handleTransferProofSelect(this)" class="w-full text-xs bg-white border border-charcoal/15 p-2.5 file:mr-3 file:py-1.5 file:px-3 file:border-0 file:bg-charcoal file:text-white file:text-[11px] file:uppercase file:tracking-wider file:cursor-pointer">
+                                        <input type="hidden" id="booking-transfer-dataurl" value="">
+                                        <input type="hidden" id="booking-transfer-filename" value="">
+                                        <div id="booking-transfer-preview-box" class="hidden p-3 bg-white border border-champagne/40 flex items-center justify-between gap-3">
+                                            <div class="flex items-center gap-3 min-w-0">
+                                                <img id="booking-transfer-preview-img" src="" alt="Preview Bukti Transfer" class="w-14 h-14 object-cover border border-charcoal/15 shrink-0">
+                                                <div class="min-w-0">
+                                                    <span class="text-[10px] font-bold uppercase text-emerald-700 block"><i class="fa-solid fa-circle-check mr-1"></i>Bukti Siap Dilampirkan</span>
+                                                    <p id="booking-transfer-preview-name" class="text-[11px] text-charcoal truncate">bukti_transfer.jpg</p>
+                                                </div>
+                                            </div>
+                                            <button type="button" onclick="clearTransferProofPreview()" class="px-2.5 py-1.5 bg-red-50 text-red-700 text-[11px] font-semibold hover:bg-red-600 hover:text-white transition-colors">
+                                                Hapus
+                                            </button>
+                                        </div>
+                                        <p class="text-[11px] text-charcoalSoft">Format yang didukung: JPG, PNG, WEBP. Bukti transfer akan langsung diteruskan ke tim Keuangan Oloris Picture.</p>
                                     </div>
                                 </div>
 
@@ -1665,9 +1966,65 @@
             if (dpEl) dpEl.textContent = `Estimasi DP (${dpPct}%): ${formatRupiah(dp)}`;
         }
 
+        function copyBookingBankAccount() {
+            const acc = db.siteConfig.bookingSettings?.bankAccountNumber || '8820918472';
+            const ta = document.createElement('textarea');
+            ta.value = acc;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            showToast(`Nomor rekening ${acc} berhasil disalin!`);
+        }
+
+        function handleTransferProofSelect(input) {
+            const file = input?.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const img = new Image();
+                img.onload = function() {
+                    const maxW = 900;
+                    const scale = img.width > maxW ? maxW / img.width : 1;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.round(img.width * scale);
+                    canvas.height = Math.round(img.height * scale);
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const compressed = canvas.toDataURL('image/jpeg', 0.8);
+
+                    const dataEl = document.getElementById('booking-transfer-dataurl');
+                    const nameEl = document.getElementById('booking-transfer-filename');
+                    const boxEl = document.getElementById('booking-transfer-preview-box');
+                    const prevImg = document.getElementById('booking-transfer-preview-img');
+                    const prevName = document.getElementById('booking-transfer-preview-name');
+
+                    if (dataEl) dataEl.value = compressed;
+                    if (nameEl) nameEl.value = file.name;
+                    if (prevImg) prevImg.src = compressed;
+                    if (prevName) prevName.textContent = file.name;
+                    if (boxEl) boxEl.classList.remove('hidden');
+                    showToast(`Bukti transfer "${file.name}" berhasil dipilih.`);
+                };
+                img.src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearTransferProofPreview() {
+            const fileInp = document.getElementById('booking-transfer-file');
+            const dataEl = document.getElementById('booking-transfer-dataurl');
+            const nameEl = document.getElementById('booking-transfer-filename');
+            const boxEl = document.getElementById('booking-transfer-preview-box');
+            if (fileInp) fileInp.value = '';
+            if (dataEl) dataEl.value = '';
+            if (nameEl) nameEl.value = '';
+            if (boxEl) boxEl.classList.add('hidden');
+        }
+
         function buildGoogleCalendarLink(proj) {
             const bSet = db.siteConfig.bookingSettings || DEFAULT_SITE_CONFIG.bookingSettings;
-            const title = encodeURIComponent(`${bSet.calendarEventPrefix || '[TIARE]'} ${proj.clientName} - ${proj.packageName}`);
+            const title = encodeURIComponent(`${bSet.calendarEventPrefix || '[OLORIS PICTURE]'} ${proj.clientName} - ${proj.packageName}`);
             const cleanDate = (proj.eventDate || '2026-12-12').replace(/-/g, '');
             const details = encodeURIComponent(
                 `Kode Lacak: ${proj.code}\nPasangan: ${proj.clientName}\nPaket: ${proj.packageName}\nWhatsApp: ${proj.whatsapp}\nGoogle Drive: ${proj.driveLinks?.rawPreview || bSet.googleDriveMasterUrl}`
@@ -1687,7 +2044,10 @@
             const packageName = pkgSel.value;
             const pkgPrice = Number(pkgSel.options[pkgSel.selectedIndex]?.dataset.price || 0);
             const location = document.getElementById('booking-location').value.trim();
-            const driveUrlInput = document.getElementById('booking-drive-url').value.trim();
+            let driveUrlInput = document.getElementById('booking-drive-url').value.trim();
+            if (driveUrlInput && !/^https?:\/\//i.test(driveUrlInput)) {
+                driveUrlInput = 'https://' + driveUrlInput;
+            }
 
             const addons = [];
             let addonPrice = 0;
@@ -1701,9 +2061,11 @@
                 if (inp.value.trim()) customData[inp.dataset.label] = inp.value.trim();
             });
 
-            const prefix = db.siteConfig.bookingSettings?.codePrefix || 'WED';
+            const prefix = (db.siteConfig.bookingSettings?.codePrefix || 'OLR').replace(/[^A-Z0-9]/gi, '').toUpperCase() || 'OLR';
             const newCode = `${prefix}-${Math.floor(1000 + Math.random() * 9000)}`;
             const masterDrive = db.siteConfig.bookingSettings?.googleDriveMasterUrl || 'https://drive.google.com';
+            const transferProofDataUrl = (document.getElementById('booking-transfer-dataurl')?.value || '').trim();
+            const transferProofFileName = (document.getElementById('booking-transfer-filename')?.value || '').trim();
 
             const newProj = {
                 code: newCode,
@@ -1716,7 +2078,12 @@
                 stage: 1,
                 totalAmount: pkgPrice + addonPrice,
                 paidAmount: 0,
-                paymentStatus: 'Menunggu Verifikasi DP',
+                paymentStatus: transferProofDataUrl ? 'Bukti Transfer Terlampir (Menunggu Verifikasi)' : 'Menunggu Verifikasi DP',
+                transferProof: transferProofDataUrl ? {
+                    image: transferProofDataUrl,
+                    fileName: transferProofFileName || 'bukti_transfer.jpg',
+                    uploadedAt: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+                } : null,
                 addons,
                 customData,
                 driveLinks: {
@@ -1729,9 +2096,9 @@
                     selectedFilenamesText: '',
                     revisionNote: '',
                     submittedAt: '',
-                    status: 'Menunggu Sesi Pemotretan'
+                    status: 'Sudah Booking'
                 },
-                studioNote: 'Terima kasih telah melakukan reservasi! Tim admin akan segera memverifikasi jadwal & folder Google Drive Anda.',
+                studioNote: 'Terima kasih telah melakukan reservasi di Oloris Picture! Tim admin akan segera memverifikasi jadwal & folder Google Drive Anda.',
                 crew: {
                     leadPhotographer: 'Belum Ditugaskan',
                     secondPhotographer: 'Belum Ditugaskan',
@@ -1746,7 +2113,7 @@
             applySiteThemeAndHeader();
 
             const calUrl = buildGoogleCalendarLink(newProj);
-            const waText = encodeURIComponent(`Halo TIARE Studio, saya *${clientName}* telah melakukan booking paket *${packageName}* untuk tanggal *${eventDate}* di *${location}*.\nKode Lacak: *${newCode}*`);
+            const waText = encodeURIComponent(`Halo Oloris Picture, saya *${clientName}* telah melakukan booking paket *${packageName}* untuk tanggal *${eventDate}* di *${location}*.\nKode Lacak: *${newCode}*`);
             const waUrl = `https://wa.me/${db.siteConfig.whatsappNumber}?text=${waText}`;
 
             const box = document.getElementById('booking-success-box');
@@ -1774,6 +2141,14 @@
                     </div>
                 `;
             }
+
+            document.getElementById('unified-booking-form')?.reset();
+            clearTransferProofPreview();
+            selectedBookingPackageName = '';
+            selectedBookingLocation = '';
+            document.querySelectorAll('.booking-addon-checkbox').forEach(cb => { cb.checked = false; });
+            document.querySelectorAll('select.custom-booking-input').forEach(sel => { sel.selectedIndex = 0; });
+            recalculateBookingTotal();
             showToast(`Reservasi ${clientName} berhasil! Kode Lacak: ${newCode}`);
         }
 
@@ -1800,7 +2175,7 @@
                     <div>
                         <span class="text-[11px] uppercase tracking-[0.25em] text-champagne font-bold">Client Production Tracker</span>
                         <h1 class="font-serif text-3xl sm:text-4xl text-charcoal mt-1">${proj.clientName}</h1>
-                        <p class="text-xs text-charcoalSoft mt-1">${proj.packageName} • ${proj.eventDate} • ${proj.location}</p>
+                        <p class="text-xs text-charcoalSoft mt-1">${proj.packageName} &bull; ${proj.eventDate} &bull; ${proj.location}</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <a href="${buildGoogleCalendarLink(proj)}" target="_blank" rel="noopener" class="px-4 py-2.5 bg-ivory border border-charcoal/15 text-xs font-semibold text-charcoal hover:border-champagne">
@@ -1812,7 +2187,6 @@
                     </div>
                 </div>
 
-                <!-- 6-Stage Progress Timeline -->
                 <div class="bg-white p-6 sm:p-8 border border-charcoal/10 shadow-sm space-y-6">
                     <div class="flex flex-wrap items-center justify-between gap-2">
                         <h2 class="font-serif text-2xl text-charcoal">Tahapan Proses Foto &amp; Editing</h2>
@@ -1842,7 +2216,6 @@
                     </div>
                 </div>
 
-                <!-- Google Drive Links & Text Input for Selected Filenames -->
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white p-6 border border-charcoal/10 shadow-sm space-y-4">
                         <h3 class="font-serif text-2xl text-charcoal">Tautan Google Drive Anda</h3>
@@ -1955,6 +2328,10 @@
 
         function closeAuthModal() {
             pendingTargetRole = null;
+            const switcher = document.getElementById('quick-role-switcher');
+            if (switcher && activeStaffUser) {
+                switcher.value = activeStaffUser.role;
+            }
             document.getElementById('role-switch-notice')?.classList.add('hidden');
             document.getElementById('auth-modal')?.classList.add('hidden');
         }
@@ -2059,7 +2436,6 @@
             const switcher = document.getElementById('quick-role-switcher');
             if (activeStaffUser && targetRole === activeStaffUser.role) return;
 
-            // Kembalikan dropdown ke role aktif saat ini sampai PIN role baru terverifikasi
             if (switcher && activeStaffUser) {
                 switcher.value = activeStaffUser.role;
             }
@@ -2071,7 +2447,6 @@
                 production: 'Tim Produksi / Kru'
             };
 
-            // Akhiri sesi role sebelumnya dan wajibkan login ulang dengan PIN role tujuan
             activeStaffUser = null;
             isSuperAdminAuthenticated = false;
             isBuilderUnlockedInSession = false;
@@ -2116,7 +2491,7 @@
         }
 
         // =====================================================================
-        // SPLIT-SCREEN VISUAL WEB BUILDER DRAWER (SUPER ADMIN ONLY & PRIVATE)
+        // SPLIT-SCREEN VISUAL WEB BUILDER DRAWER (SUPER ADMIN ONLY)
         // =====================================================================
         function toggleVisualBuilder(forceState) {
             const hasPrivateBuilderAccess = Boolean(
@@ -2265,8 +2640,8 @@
                                     <span>${sec.label}</span>
                                 </label>
                                 <div class="flex gap-1">
-                                    <button type="button" onclick="moveSectionOrder(${idx}, -1); renderVisualBuilderDrawer();" class="px-2 py-1 bg-white border rounded">↑</button>
-                                    <button type="button" onclick="moveSectionOrder(${idx}, 1); renderVisualBuilderDrawer();" class="px-2 py-1 bg-white border rounded">↓</button>
+                                    <button type="button" onclick="moveSectionOrder(${idx}, -1); renderVisualBuilderDrawer();" class="px-2 py-1 bg-white border rounded">&uarr;</button>
+                                    <button type="button" onclick="moveSectionOrder(${idx}, 1); renderVisualBuilderDrawer();" class="px-2 py-1 bg-white border rounded">&darr;</button>
                                 </div>
                             </div>
                         `).join('')}
@@ -2402,7 +2777,6 @@
             else if (activeAdminModule === 'finance') renderModuleFinance(content);
         }
 
-        // --- MODULE: PROJECTS, PHOTO STAGES, GOOGLE DRIVE & CLIENT FILE LIST ---
         function setProjectSelectionStatus(code, statusLabel, suggestedStage) {
             const proj = db.projects.find(p => p.code === code);
             if (!proj) return;
@@ -2463,9 +2837,9 @@
                                         <div class="flex flex-wrap items-center gap-2">
                                             <span class="font-mono text-xs font-bold px-2.5 py-0.5 rounded bg-charcoal text-champagneLight">${p.code}</span>
                                             <h4 class="font-serif text-2xl font-semibold text-charcoal">${p.clientName}</h4>
-                                            <span class="text-xs text-charcoalSoft">• ${p.packageName} (${p.eventDate})</span>
+                                            <span class="text-xs text-charcoalSoft">&bull; ${p.packageName} (${p.eventDate})</span>
                                         </div>
-                                        <p class="text-xs text-charcoalSoft mt-1">Lokasi: ${p.location} • WA: ${p.whatsapp} • Kru: <strong>${p.crew.leadPhotographer}</strong> / <strong>${p.crew.editor}</strong></p>
+                                        <p class="text-xs text-charcoalSoft mt-1">Lokasi: ${p.location} &bull; WA: ${p.whatsapp} &bull; Kru: <strong>${p.crew.leadPhotographer}</strong> / <strong>${p.crew.editor}</strong></p>
                                     </div>
                                     <div class="flex flex-wrap items-center gap-2">
                                         <a href="${buildGoogleCalendarLink(p)}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-xl bg-ivory border border-charcoal/15 text-xs font-semibold text-charcoal hover:border-champagne">
@@ -2537,12 +2911,14 @@
         function saveProjectDriveAndStage(code) {
             const proj = db.projects.find(p => p.code === code);
             if (!proj) return;
-            proj.stage = Number(document.getElementById(`proj-stage-${code}`).value);
-            proj.photoSelection.quota = Number(document.getElementById(`proj-quota-${code}`).value || 100);
-            proj.driveLinks.rawPreview = document.getElementById(`proj-drive-raw-${code}`).value.trim();
-            proj.driveLinks.finalEdited = document.getElementById(`proj-drive-final-${code}`).value.trim();
-            proj.driveLinks.videoTeaser = document.getElementById(`proj-drive-video-${code}`).value.trim();
-            proj.studioNote = document.getElementById(`proj-note-${code}`).value.trim();
+            const stageVal = Number(document.getElementById(`proj-stage-${code}`)?.value);
+            const quotaVal = Number(document.getElementById(`proj-quota-${code}`)?.value);
+            proj.stage = Number.isFinite(stageVal) && stageVal >= 1 && stageVal <= 6 ? stageVal : proj.stage;
+            proj.photoSelection.quota = Number.isFinite(quotaVal) && quotaVal > 0 ? Math.floor(quotaVal) : 100;
+            proj.driveLinks.rawPreview = (document.getElementById(`proj-drive-raw-${code}`)?.value || '').trim();
+            proj.driveLinks.finalEdited = (document.getElementById(`proj-drive-final-${code}`)?.value || '').trim();
+            proj.driveLinks.videoTeaser = (document.getElementById(`proj-drive-video-${code}`)?.value || '').trim();
+            proj.studioNote = (document.getElementById(`proj-note-${code}`)?.value || '').trim();
 
             saveDatabase(`${activeStaffUser.name} (${activeStaffUser.roleLabel})`, `Memperbarui progres tahap ${proj.stage} & link Google Drive untuk ${proj.code}.`);
             showToast(`Progres & Google Drive untuk ${proj.clientName} berhasil disimpan!`);
@@ -2565,7 +2941,6 @@
             showToast('Daftar nama file berhasil disalin untuk Lightroom/Finder!');
         }
 
-        // --- MODULE: CREW DIVISIONS (FOTO, VIDEO, EDITOR, DRONE, KOORDINATOR), JOB DESK & SOP ---
         function setCrewDivisionFilter(division) {
             activeCrewDivisionFilter = division;
             renderAdminPortal();
@@ -2807,7 +3182,7 @@
                                         <div class="lg:col-span-3">
                                             <span class="font-mono text-xs font-bold text-champagneDark">${p.code}</span>
                                             <h4 class="font-serif text-xl font-semibold text-charcoal">${p.clientName}</h4>
-                                            <p class="text-xs text-charcoalSoft">${p.eventDate} • ${p.location}</p>
+                                            <p class="text-xs text-charcoalSoft">${p.eventDate} &bull; ${p.location}</p>
                                         </div>
                                         <div class="lg:col-span-2">
                                             <label class="block text-[10px] font-bold uppercase text-charcoalSoft mb-1">Tim Foto (Lead)</label>
@@ -2848,7 +3223,6 @@
             `;
         }
 
-        // --- MODULE: FINANCE, INVOICE & NET MARGIN ---
         function renderModuleFinance(container) {
             const totalRevenue = db.projects.reduce((acc, p) => acc + Number(p.totalAmount || 0), 0);
             const totalPaid = db.projects.reduce((acc, p) => acc + Number(p.paidAmount || 0), 0);
@@ -2904,6 +3278,20 @@
                                         </button>
                                     </div>
                                     <p class="text-[11px] text-charcoalSoft">Biaya Operasional Tercatat: <strong>${formatRupiah(projExp)}</strong></p>
+                                    ${p.transferProof && p.transferProof.image ? `
+                                        <div class="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+                                            <div class="flex items-center gap-3">
+                                                <img src="${p.transferProof.image}" alt="Bukti Transfer ${p.clientName}" onclick="openLightbox('${p.transferProof.image}', 'Bukti Transfer - ${p.clientName.replace(/'/g, "\\'")}', '${p.code}', '${p.transferProof.fileName || 'Bukti DP'}')" class="w-14 h-14 object-cover rounded-lg border border-emerald-300 cursor-pointer">
+                                                <div>
+                                                    <span class="font-bold text-emerald-900 block"><i class="fa-solid fa-receipt mr-1"></i>Bukti Transfer Diunggah Klien</span>
+                                                    <span class="text-[11px] text-emerald-800">${p.transferProof.fileName || 'bukti_transfer.jpg'} &bull; Diunggah: ${p.transferProof.uploadedAt || '-'}</span>
+                                                </div>
+                                            </div>
+                                            <button type="button" onclick="openLightbox('${p.transferProof.image}', 'Bukti Transfer - ${p.clientName.replace(/'/g, "\\'")}', '${p.code}', '${p.transferProof.fileName || 'Bukti DP'}')" class="px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-semibold">
+                                                Perbesar Bukti
+                                            </button>
+                                        </div>
+                                    ` : ''}
                                 </div>
                             `;
                         }).join('')}
@@ -2915,8 +3303,10 @@
         function saveFinanceUpdate(code) {
             const proj = db.projects.find(p => p.code === code);
             if (!proj) return;
-            proj.paidAmount = Number(document.getElementById(`fin-paid-${code}`).value || 0);
-            proj.paymentStatus = document.getElementById(`fin-status-${code}`).value.trim();
+            const rawPaid = Number(document.getElementById(`fin-paid-${code}`)?.value);
+            const rawStatus = (document.getElementById(`fin-status-${code}`)?.value || '').trim();
+            proj.paidAmount = Number.isFinite(rawPaid) && rawPaid >= 0 ? rawPaid : 0;
+            proj.paymentStatus = rawStatus || proj.paymentStatus || 'Menunggu Verifikasi DP';
             saveDatabase(`${activeStaffUser.name} (${activeStaffUser.roleLabel})`, `Memperbarui status pembayaran ${proj.code} (${proj.paymentStatus}).`);
             showToast(`Data pembayaran ${proj.clientName} diperbarui!`);
             renderAdminPortal();
@@ -2943,7 +3333,7 @@
                     <div>
                         <span class="text-charcoalSoft block">Ditagihkan Kepada:</span>
                         <strong class="text-sm text-charcoal">${proj.clientName}</strong>
-                        <p class="text-charcoalSoft">${proj.whatsapp} • ${proj.location}</p>
+                        <p class="text-charcoalSoft">${proj.whatsapp} &bull; ${proj.location}</p>
                     </div>
                     <div class="text-right">
                         <span class="text-charcoalSoft block">Tanggal Acara:</span>
@@ -2960,7 +3350,7 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td class="py-3 font-semibold">${proj.packageName}</td>
+                            <td class="py-3 font-semibold">${proj.packageName}${proj.addons && proj.addons.length ? ` (+ ${proj.addons.join(', ')})` : ''}</td>
                             <td class="py-3 text-right">${formatRupiah(proj.totalAmount)}</td>
                         </tr>
                     </tbody>
@@ -2978,7 +3368,6 @@
             wrapper.classList.remove('hidden');
         }
 
-        // --- MODULE: SUPER ADMIN WEBSITE & SYSTEM CONFIG (CMS) ---
         function renderModuleSuperAdminCMS(container) {
             const tabs = [
                 { id: 'theme', label: '1. Tema & Dashboard' },
@@ -3049,17 +3438,19 @@
                         </div>
 
                         <div class="pt-4 border-t border-charcoal/10 space-y-3 text-xs">
-                            <div class="flex items-center justify-between">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
                                 <div>
                                     <h4 class="font-bold text-charcoal uppercase tracking-wider"><i class="fa-solid fa-shield-halved text-champagne mr-1.5"></i>Privasi &amp; Keamanan Akses Website</h4>
                                     <p class="text-[11px] text-charcoalSoft">Web Builder terkunci eksklusif untuk Super Admin. Aktifkan mode privat untuk mengunci halaman publik dengan kata sandi.</p>
                                 </div>
-                                <button type="button" onclick="logoutStaffSession()" class="px-3 py-1.5 rounded-xl bg-red-50 text-red-700 hover:bg-red-600 hover:text-white font-semibold whitespace-nowrap transition-colors">
-                                    Keluar Sesi Admin
-                                </button>
-                                <button type="button" onclick="lockWebBuilderNow()" class="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-800 hover:bg-amber-600 hover:text-white font-semibold whitespace-nowrap transition-colors">
-                                    Kunci Web Builder
-                                </button>
+                                <div class="flex gap-2">
+                                    <button type="button" onclick="lockWebBuilderNow()" class="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-800 hover:bg-amber-600 hover:text-white font-semibold whitespace-nowrap transition-colors">
+                                        Kunci Web Builder
+                                    </button>
+                                    <button type="button" onclick="logoutStaffSession()" class="px-3 py-1.5 rounded-xl bg-red-50 text-red-700 hover:bg-red-600 hover:text-white font-semibold whitespace-nowrap transition-colors">
+                                        Keluar Sesi Admin
+                                    </button>
+                                </div>
                             </div>
                             <label class="p-3 rounded-xl bg-ivory border border-charcoal/15 flex items-center justify-between cursor-pointer">
                                 <span class="font-semibold text-charcoal">Kunci Website Publik (Mode Privat Berpassword)</span>
@@ -3071,7 +3462,7 @@
                             </label>
                             <div>
                                 <label class="block font-semibold text-charcoalSoft mb-1">Kata Sandi Akses Tamu (Saat Mode Privat Aktif)</label>
-                                <input type="text" value="${priv.sitePasscode || 'TIARE2026'}" oninput="db.siteConfig.privacySettings.sitePasscode=this.value; saveDatabase();" class="w-full px-3 py-2 rounded-xl bg-ivory border border-charcoal/15 font-mono font-bold">
+                                <input type="text" value="${priv.sitePasscode || 'OLORIS2026'}" oninput="db.siteConfig.privacySettings.sitePasscode=this.value; saveDatabase();" class="w-full px-3 py-2 rounded-xl bg-ivory border border-charcoal/15 font-mono font-bold">
                             </div>
                         </div>
                     </div>
@@ -3125,10 +3516,10 @@
                         ${logos.map((logo, idx) => `
                             <div class="p-3 rounded-xl bg-ivory border border-charcoal/10 space-y-2">
                                 <div class="flex items-center justify-between gap-2">
-                                    <span class="font-bold text-charcoal">#${idx + 1} • ${logo.name}</span>
+                                    <span class="font-bold text-charcoal">#${idx + 1} &bull; ${logo.name}</span>
                                     <div class="flex items-center gap-1">
-                                        <button type="button" onclick="movePressLogoOrder(${idx}, -1, ${compact})" class="px-2 py-1 bg-white border rounded">↑</button>
-                                        <button type="button" onclick="movePressLogoOrder(${idx}, 1, ${compact})" class="px-2 py-1 bg-white border rounded">↓</button>
+                                        <button type="button" onclick="movePressLogoOrder(${idx}, -1, ${compact})" class="px-2 py-1 bg-white border rounded">&uarr;</button>
+                                        <button type="button" onclick="movePressLogoOrder(${idx}, 1, ${compact})" class="px-2 py-1 bg-white border rounded">&darr;</button>
                                         <button type="button" onclick="removePressLogoItem(${idx}, ${compact})" class="px-2 py-1 bg-red-50 text-red-700 border border-red-200 rounded font-semibold">Hapus</button>
                                     </div>
                                 </div>
@@ -3238,7 +3629,7 @@
                                 <div class="p-3 rounded-xl bg-ivory border border-charcoal/10 space-y-2 text-xs">
                                     <img src="${item.image}" alt="${item.title}" class="w-full h-32 object-cover rounded-lg" onerror="this.src='https://placehold.co/600x400/EFE9DE/1E1E1E?text=Oloris+Picture'">
                                     <strong class="block text-charcoal">${item.title}</strong>
-                                    <span class="text-charcoalSoft block">${item.category} • ${item.location}</span>
+                                    <span class="text-charcoalSoft block">${item.category} &bull; ${item.location}</span>
                                     <button type="button" onclick="db.siteConfig.portfolioItems.splice(${idx}, 1); saveDatabase('Super Admin', 'Menghapus foto portofolio.'); renderAdminPortal();" class="text-red-700 font-semibold hover:underline">Hapus Foto</button>
                                 </div>
                             `).join('')}
@@ -3247,6 +3638,7 @@
                 </div>
             `;
         }
+
         function handlePortfolioFileSelect(input) {
             const file = input?.files?.[0];
             if (!file) return;
@@ -3357,6 +3749,18 @@
                             <input type="url" value="${bSet.googleDriveMasterUrl}" oninput="db.siteConfig.bookingSettings.googleDriveMasterUrl=this.value; renderLandingSections(); saveDatabase();" class="w-full px-3.5 py-2.5 rounded-xl bg-ivory border border-charcoal/15">
                         </div>
                         <div>
+                            <label class="block font-semibold text-charcoalSoft mb-1">Nama Bank Rekening Studio</label>
+                            <input type="text" value="${bSet.bankName || 'Bank Central Asia (BCA)'}" oninput="db.siteConfig.bookingSettings.bankName=this.value; renderLandingSections(); saveDatabase();" class="w-full px-3.5 py-2.5 rounded-xl bg-ivory border border-charcoal/15">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-charcoalSoft mb-1">Nomor Rekening Studio</label>
+                            <input type="text" value="${bSet.bankAccountNumber || '8820918472'}" oninput="db.siteConfig.bookingSettings.bankAccountNumber=this.value; renderLandingSections(); saveDatabase();" class="w-full px-3.5 py-2.5 rounded-xl bg-ivory border border-charcoal/15 font-mono">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block font-semibold text-charcoalSoft mb-1">Nama Pemilik Rekening (Atas Nama)</label>
+                            <input type="text" value="${bSet.bankAccountHolder || 'OLORIS PICTURE STUDIO'}" oninput="db.siteConfig.bookingSettings.bankAccountHolder=this.value; renderLandingSections(); saveDatabase();" class="w-full px-3.5 py-2.5 rounded-xl bg-ivory border border-charcoal/15">
+                        </div>
+                        <div>
                             <label class="block font-semibold text-charcoalSoft mb-1">Email Google Calendar Studio</label>
                             <input type="email" value="${bSet.googleCalendarEmail}" oninput="db.siteConfig.bookingSettings.googleCalendarEmail=this.value; renderLandingSections(); saveDatabase();" class="w-full px-3.5 py-2.5 rounded-xl bg-ivory border border-charcoal/15">
                         </div>
@@ -3395,9 +3799,9 @@
                                                 <div class="flex items-center gap-2">
                                                     <strong class="text-sm text-charcoal">${st.name}</strong>
                                                     <span class="px-2 py-0.5 rounded bg-champagneLight text-champagneDark text-[10px] font-bold">${st.roleLabel}</span>
-                                                    <span class="text-[11px] text-charcoalSoft">• ${st.division || '-'}</span>
+                                                    <span class="text-[11px] text-charcoalSoft">&bull; ${st.division || '-'}</span>
                                                 </div>
-                                                <p class="text-[11px] text-charcoalSoft">${st.specialty || ''} • PIN Aktif: <span class="font-mono font-bold text-charcoal">${isPinRevealed ? st.pin : '••••'}</span></p>
+                                                <p class="text-[11px] text-charcoalSoft">${st.specialty || ''} &bull; PIN Aktif: <span class="font-mono font-bold text-charcoal">${isPinRevealed ? st.pin : '••••'}</span></p>
                                             </div>
                                             <div class="flex flex-wrap items-center gap-1.5">
                                                 <button type="button" onclick="revealedPinsMap['${st.id}']=!revealedPinsMap['${st.id}']; renderAdminPortal();" class="px-2.5 py-1.5 rounded-lg bg-white border border-charcoal/15 text-charcoal" title="Lihat/Sembunyikan PIN">
@@ -3476,6 +3880,7 @@
             const target = db.staff.find(s => s.id === staffId);
             if (!target) return;
             target.pin = newPin;
+            if (input) input.value = '';
             saveDatabase(`${activeStaffUser.name} (Super Admin)`, `Mengganti PIN akses login untuk ${target.name} (${target.roleLabel}).`);
             showToast(`PIN login untuk ${target.name} berhasil diperbarui!`);
             renderAdminPortal();
@@ -3494,6 +3899,10 @@
             const jobDesk = document.getElementById('stf-jobdesk')?.value.trim() || 'Menjalankan tugas produksi sesuai jadwal liputan.';
             const sop = document.getElementById('stf-sop')?.value.trim() || '1. Hadir 30 menit sebelum acara.\n2. Backup file setelah sesi selesai.';
 
+            if (!/^[0-9]{4}$/.test(pin)) {
+                showToast('PIN harus terdiri dari 4 digit angka.', 'error');
+                return;
+            }
             if (db.staff.some(s => s.pin === pin)) {
                 showToast('PIN sudah digunakan oleh staff lain.', 'error');
                 return;
