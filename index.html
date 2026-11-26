@@ -191,15 +191,47 @@
                         <i class="fa-solid fa-magnifying-glass-location text-[10px] text-champagne"></i>
                         <span>Lacak Foto</span>
                     </button>
-                    <span class="text-charcoal/20">|</span>
-                    <button type="button" onclick="toggleVisualBuilder()" class="hover:text-champagneDark font-semibold text-champagneDark transition-colors flex items-center gap-1">
+                    <span id="top-bar-builder-divider" class="hidden text-charcoal/20">|</span>
+                    <button type="button" id="top-bar-builder-btn" onclick="toggleVisualBuilder()" class="hidden hover:text-champagneDark font-semibold text-champagneDark transition-colors flex items-center gap-1">
                         <i class="fa-solid fa-sliders text-[10px]"></i>
                         <span>Web Builder</span>
                     </button>
                     <span class="text-charcoal/20">|</span>
                     <button type="button" onclick="openAuthModal('staff')" class="hover:text-charcoal font-medium transition-colors flex items-center gap-1.5">
-                        <span>Log In</span>
+                        <span id="top-bar-login-label">Log In</span>
                         <i class="fa-regular fa-user text-[11px]"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRIVATE WEBSITE LOCK SCREEN (SHOWN WHEN WEBSITE PRIVACY MODE IS ENABLED) -->
+        <div id="private-site-gate" class="hidden flex-1 flex items-center justify-center px-4 py-20 bg-ivory">
+            <div class="max-w-md w-full bg-white p-8 sm:p-10 border border-champagne/30 shadow-2xl text-center space-y-6">
+                <div class="w-14 h-14 mx-auto rounded-full bg-champagneLight text-champagneDark flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <div class="space-y-2">
+                    <span class="text-[10px] uppercase tracking-[0.3em] text-champagne font-bold">Private Editorial Atelier</span>
+                    <h2 id="private-gate-title" class="font-serif text-3xl text-charcoal">Akses Terbatas Klien &amp; Tim</h2>
+                    <p id="private-gate-desc" class="text-xs text-charcoalSoft leading-relaxed">
+                        Website ini bersifat privat. Silakan masuk menggunakan Kode Lacak Klien, Kata Sandi Tamu Undangan, atau PIN Super Admin.
+                    </p>
+                </div>
+                <form onsubmit="unlockPrivateWebsite(event)" class="space-y-3 text-left">
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-charcoalSoft">Kode Akses / Kata Sandi Website</label>
+                    <input type="password" id="private-site-passcode-input" required placeholder="Masukkan kode akses..." class="w-full px-4 py-3 bg-ivory border border-charcoal/20 text-sm text-center tracking-widest focus:outline-none focus:border-champagne">
+                    <button type="submit" class="w-full py-3.5 bg-charcoal hover:bg-champagneDark text-white text-xs font-semibold uppercase tracking-[0.22em] transition-colors">
+                        Buka Website Privat
+                    </button>
+                </form>
+                <div class="pt-4 border-t border-charcoal/10 flex items-center justify-center gap-4 text-xs">
+                    <button type="button" onclick="openAuthModal('client')" class="text-champagneDark font-semibold hover:underline">
+                        Portal Lacak Klien
+                    </button>
+                    <span class="text-charcoal/20">•</span>
+                    <button type="button" onclick="openAuthModal('staff')" class="text-charcoalSoft hover:text-charcoal font-medium">
+                        Login Staff / Super Admin
                     </button>
                 </div>
             </div>
@@ -297,8 +329,11 @@
                         <button type="button" onclick="openAuthModal('client')" class="px-4 py-2 border border-charcoal/20 hover:border-champagne text-charcoal text-[11px] uppercase tracking-wider transition-colors">
                             Portal Lacak Klien
                         </button>
-                        <button type="button" onclick="toggleVisualBuilder()" class="px-4 py-2 bg-champagne text-white text-[11px] uppercase tracking-wider hover:bg-champagneDark transition-colors">
+                        <button type="button" id="footer-builder-btn" onclick="toggleVisualBuilder()" class="hidden px-4 py-2 bg-champagne text-white text-[11px] uppercase tracking-wider hover:bg-champagneDark transition-colors">
                             Buka Web Builder
+                        </button>
+                        <button type="button" onclick="openAuthModal('staff')" class="px-4 py-2 bg-charcoal text-white text-[11px] uppercase tracking-wider hover:bg-champagneDark transition-colors">
+                            Portal Internal Studio
                         </button>
                     </div>
                 </div>
@@ -368,12 +403,15 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="text-[11px] font-semibold uppercase text-charcoalSoft">Role:</span>
-                    <select id="quick-role-switcher" onchange="quickSwitchRole(this.value)" class="px-3 py-2 rounded-xl bg-ivory border border-champagne/40 text-xs font-semibold text-charcoal focus:outline-none">
+                    <select id="quick-role-switcher" onchange="requestRoleSwitchWithRelogin(this.value)" class="px-3 py-2 rounded-xl bg-ivory border border-champagne/40 text-xs font-semibold text-charcoal focus:outline-none">
                         <option value="superadmin">Super Admin</option>
                         <option value="admin">Admin Operasional</option>
                         <option value="finance">Keuangan / Finance</option>
                         <option value="production">Tim Produksi / Kru</option>
                     </select>
+                    <button type="button" onclick="logoutStaffSession()" class="px-3 py-2 rounded-xl bg-red-50 hover:bg-red-600 text-red-700 hover:text-white text-xs font-semibold transition-colors">
+                        <i class="fa-solid fa-right-from-bracket mr-1"></i> Keluar / Ganti Akun
+                    </button>
                     <button type="button" onclick="switchMainView('landing')" class="px-3 py-2 rounded-xl bg-charcoal text-white text-xs">
                         Web Publik
                     </button>
@@ -425,6 +463,10 @@
 
                 <!-- Staff & Super Admin Login (PIN Masked by Default) -->
                 <div id="auth-panel-staff" class="hidden space-y-4">
+                    <div id="role-switch-notice" class="hidden p-3 rounded-xl bg-champagneLight/70 border border-champagne/40 text-xs text-charcoal">
+                        <strong class="block text-champagneDark"><i class="fa-solid fa-shield-halved mr-1"></i>Konfirmasi Login Ulang Diperlukan</strong>
+                        <span id="role-switch-notice-text">Masukkan PIN 4-digit untuk beralih ke role tujuan.</span>
+                    </div>
                     <form onsubmit="loginAsStaffByPin(event)" class="space-y-3">
                         <label class="block text-xs font-semibold uppercase tracking-wider text-charcoalSoft">Masukkan PIN Akses (4 Digit)</label>
                         <input type="password" id="staff-pin-input" required maxlength="4" pattern="[0-9]{4}" placeholder="••••" class="w-full px-4 py-3 rounded-xl bg-white border border-charcoal/20 font-mono text-center text-lg tracking-[0.5em] focus:outline-none focus:border-champagne">
@@ -433,7 +475,7 @@
                         </button>
                     </form>
 
-                    <div class="pt-4 border-t border-charcoal/10 space-y-2.5">
+                    <div id="staff-demo-login-box" class="pt-4 border-t border-charcoal/10 space-y-2.5">
                         <div class="flex items-center justify-between">
                             <p class="text-xs font-semibold text-charcoalSoft">1-Klik Demo Login Berdasarkan Role:</p>
                             <button type="button" onclick="toggleDemoPinsVisibility()" class="text-[11px] font-semibold text-champagneDark hover:text-charcoal flex items-center gap-1">
@@ -516,11 +558,19 @@
             { step: 6, title: 'Final Google Drive & Cetak Siap', desc: 'Seluruh file HD siap diunduh.' }
         ];
 
-        const THEME_PRESETS = [
-            { name: 'TIARE Champagne', bg: '#FAF8F5', bgAlt: '#F3EFEA', text: '#1E1E1E', accent: '#9E8A68', accentDark: '#7C6B4E', accentLight: '#EFE9DE' },
-            { name: 'Sage Botanical', bg: '#F6F8F5', bgAlt: '#EBF0E8', text: '#1D241E', accent: '#758A6F', accentDark: '#556850', accentLight: '#E2EAE0' },
-            { name: 'Dusty Rose Editorial', bg: '#FBF7F7', bgAlt: '#F4ECEC', text: '#241C1D', accent: '#B48387', accentDark: '#8F6165', accentLight: '#F2E3E4' },
-            { name: 'Midnight Noir', bg: '#F7F6F4', bgAlt: '#ECEAE6', text: '#141414', accent: '#4A453E', accentDark: '#26231F', accentLight: '#E3E0DA' }
+        const SELECTION_EDITING_STATUSES = [
+            { label: 'Sudah Booking', stage: 1, badgeClass: 'bg-sky-50 text-sky-800 border-sky-200', activeClass: 'bg-sky-700 text-white border-sky-700' },
+            { label: 'Jadwal & Kru Terkunci', stage: 1, badgeClass: 'bg-indigo-50 text-indigo-800 border-indigo-200', activeClass: 'bg-indigo-700 text-white border-indigo-700' },
+            { label: 'Sesi Pemotretan Berjalan', stage: 2, badgeClass: 'bg-amber-50 text-amber-800 border-amber-200', activeClass: 'bg-amber-600 text-white border-amber-600' },
+            { label: 'Backup & Kurasi RAW', stage: 2, badgeClass: 'bg-orange-50 text-orange-800 border-orange-200', activeClass: 'bg-orange-600 text-white border-orange-600' },
+            { label: 'Upload Drive Preview', stage: 3, badgeClass: 'bg-purple-50 text-purple-800 border-purple-200', activeClass: 'bg-purple-700 text-white border-purple-700' },
+            { label: 'Menunggu Pilihan Klien', stage: 3, badgeClass: 'bg-fuchsia-50 text-fuchsia-800 border-fuchsia-200', activeClass: 'bg-fuchsia-700 text-white border-fuchsia-700' },
+            { label: 'Daftar File Diterima Editor', stage: 4, badgeClass: 'bg-cyan-50 text-cyan-800 border-cyan-200', activeClass: 'bg-cyan-700 text-white border-cyan-700' },
+            { label: 'Masih Di-Edit / Retouching', stage: 5, badgeClass: 'bg-amber-50 text-amber-900 border-amber-300', activeClass: 'bg-amber-700 text-white border-amber-700' },
+            { label: 'Revisi Warna / Tone', stage: 5, badgeClass: 'bg-rose-50 text-rose-800 border-rose-200', activeClass: 'bg-rose-700 text-white border-rose-700' },
+            { label: 'Render Video & Teaser', stage: 5, badgeClass: 'bg-violet-50 text-violet-800 border-violet-200', activeClass: 'bg-violet-700 text-white border-violet-700' },
+            { label: 'Proses Cetak Photobook', stage: 6, badgeClass: 'bg-teal-50 text-teal-800 border-teal-200', activeClass: 'bg-teal-700 text-white border-teal-700' },
+            { label: 'Selesai & Final Drive Siap', stage: 6, badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200', activeClass: 'bg-emerald-700 text-white border-emerald-700' }
         ];
 
         const CREW_DIVISIONS = [
@@ -692,6 +742,13 @@
                 calendarEventPrefix: '[TIARE SHOOT]',
                 appsScriptUrl: ''
             },
+            privacySettings: {
+                isPrivateSite: false,
+                sitePasscode: 'TIARE2026',
+                hideDemoButtons: true,
+                privateHeadline: 'Akses Terbatas Klien & Tim',
+                privateMessage: 'Website & portofolio ini bersifat privat. Masukkan kata sandi akses tamu atau login menggunakan PIN Super Admin.'
+            },
             theme: {
                 bg: '#FAF8F5',
                 bgAlt: '#F3EFEA',
@@ -847,7 +904,9 @@
         let db = loadDatabase();
         let activeMainView = 'landing';
         let activeClientCode = 'WED-2026';
-        let activeStaffUser = db.staff[0];
+        let activeStaffUser = null;
+        let isSuperAdminAuthenticated = false;
+        let isPrivateSiteUnlocked = false;
         let activeAdminModule = 'cms';
         let activeSuperAdminTab = 'theme';
         let activeLandingPkgCategory = 'prewedding';
@@ -859,6 +918,7 @@
         let revealedPinsMap = {};
         let showDemoPins = false;
         let editingCrewId = null;
+        let pendingTargetRole = null;
 
         function loadDatabase() {
             try {
@@ -868,6 +928,7 @@
                 parsed.siteConfig = { ...JSON.parse(JSON.stringify(DEFAULT_SITE_CONFIG)), ...(parsed.siteConfig || {}) };
                 parsed.siteConfig.theme = { ...DEFAULT_SITE_CONFIG.theme, ...(parsed.siteConfig.theme || {}) };
                 parsed.siteConfig.bookingSettings = { ...DEFAULT_SITE_CONFIG.bookingSettings, ...(parsed.siteConfig.bookingSettings || {}) };
+                parsed.siteConfig.privacySettings = { ...DEFAULT_SITE_CONFIG.privacySettings, ...(parsed.siteConfig.privacySettings || {}) };
                 if (Array.isArray(parsed.staff)) {
                     parsed.staff = parsed.staff.map(s => ({
                         division: s.role === 'production' ? 'Tim Foto' : (s.role === 'admin' ? 'Koordinator Lapangan' : 'Manajemen'),
@@ -987,9 +1048,73 @@
             const countStr = `(${db.projects.length})`;
             setText('header-cart-count', countStr);
             setText('mobile-cart-count', countStr);
+
+            // Strictly show Web Builder triggers ONLY when Super Admin is authenticated
+            const canUseBuilder = isSuperAdminAuthenticated && activeStaffUser && activeStaffUser.role === 'superadmin';
+            document.getElementById('top-bar-builder-btn')?.classList.toggle('hidden', !canUseBuilder);
+            document.getElementById('top-bar-builder-divider')?.classList.toggle('hidden', !canUseBuilder);
+            document.getElementById('footer-builder-btn')?.classList.toggle('hidden', !canUseBuilder);
+
+            const loginLabel = document.getElementById('top-bar-login-label');
+            if (loginLabel) {
+                loginLabel.textContent = activeStaffUser ? `${activeStaffUser.name} (${activeStaffUser.roleLabel})` : 'Log In';
+            }
+
+            // Enforce Website Privacy Gate if enabled
+            const priv = cfg.privacySettings || DEFAULT_SITE_CONFIG.privacySettings;
+            const isLocked = priv.isPrivateSite && !isPrivateSiteUnlocked && !canUseBuilder;
+            document.getElementById('private-site-gate')?.classList.toggle('hidden', !isLocked);
+            document.getElementById('main-navbar')?.classList.toggle('hidden', isLocked);
+            document.getElementById('landing-sections-container')?.classList.toggle('hidden', isLocked);
+            if (isLocked) {
+                setText('private-gate-title', priv.privateHeadline || 'Akses Terbatas Klien & Tim');
+                setText('private-gate-desc', priv.privateMessage || 'Website ini bersifat privat.');
+            }
+        }
+
+        function unlockPrivateWebsite(e) {
+            e.preventDefault();
+            const inp = document.getElementById('private-site-passcode-input');
+            const val = (inp ? inp.value : '').trim();
+            const priv = db.siteConfig.privacySettings || DEFAULT_SITE_CONFIG.privacySettings;
+            const superAdminUser = db.staff.find(s => s.role === 'superadmin' && s.active && s.pin === val);
+
+            if (superAdminUser) {
+                activeStaffUser = superAdminUser;
+                isSuperAdminAuthenticated = true;
+                isPrivateSiteUnlocked = true;
+                if (inp) inp.value = '';
+                applySiteThemeAndHeader();
+                renderLandingSections();
+                showToast(`Selamat datang Super Admin (${superAdminUser.name}). Akses penuh & Web Builder aktif.`);
+                return;
+            }
+
+            if (val && val === priv.sitePasscode) {
+                isPrivateSiteUnlocked = true;
+                if (inp) inp.value = '';
+                applySiteThemeAndHeader();
+                renderLandingSections();
+                showToast('Akses website privat berhasil dibuka!');
+            } else {
+                showToast('Kode akses atau PIN salah.', 'error');
+            }
+        }
+
+        function logoutStaffSession() {
+            activeStaffUser = null;
+            isSuperAdminAuthenticated = false;
+            if (isVisualBuilderOpen) toggleVisualBuilder(false);
+            switchMainView('landing');
+            showToast('Sesi staff telah keluar. Web Builder dikunci kembali.');
         }
 
         function switchMainView(view) {
+            if (view === 'admin' && !activeStaffUser) {
+                openAuthModal('staff');
+                showToast('Silakan login menggunakan PIN Staff terlebih dahulu.', 'error');
+                return;
+            }
             activeMainView = view;
             document.getElementById('view-landing')?.classList.toggle('hidden', view !== 'landing');
             document.getElementById('view-client')?.classList.toggle('hidden', view !== 'client');
@@ -1649,9 +1774,12 @@
 
                 <!-- 6-Stage Progress Timeline -->
                 <div class="bg-white p-6 sm:p-8 border border-charcoal/10 shadow-sm space-y-6">
-                    <div class="flex items-center justify-between">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
                         <h2 class="font-serif text-2xl text-charcoal">Tahapan Proses Foto &amp; Editing</h2>
-                        <span class="px-3 py-1 bg-champagneLight text-champagneDark text-xs font-bold">Tahap ${proj.stage} dari 6</span>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="px-3 py-1 bg-charcoal text-white text-xs font-semibold">${proj.photoSelection?.status || 'Sudah Booking'}</span>
+                            <span class="px-3 py-1 bg-champagneLight text-champagneDark text-xs font-bold">Tahap ${proj.stage} dari 6</span>
+                        </div>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         ${PROCESS_STAGES.map(st => {
@@ -1763,13 +1891,22 @@
         function openAuthModal(tab = 'client') {
             const modal = document.getElementById('auth-modal');
             if (!modal) return;
+            const priv = db.siteConfig.privacySettings || DEFAULT_SITE_CONFIG.privacySettings;
             const demoContainer = document.getElementById('demo-client-buttons');
             if (demoContainer) {
-                demoContainer.innerHTML = db.projects.map(p => `
-                    <button type="button" onclick="quickClientLogin('${p.code}')" class="px-3 py-1.5 rounded-lg bg-white hover:border-champagne border border-charcoal/15 font-mono text-xs font-bold text-charcoal">
-                        ${p.code} (${p.clientName})
-                    </button>
-                `).join('');
+                if (priv.isPrivateSite || priv.hideDemoButtons) {
+                    demoContainer.innerHTML = `<p class="text-[11px] italic text-charcoalSoft">Mode privasi aktif: masukkan Kode Lacak resmi Anda pada kolom di atas.</p>`;
+                } else {
+                    demoContainer.innerHTML = db.projects.map(p => `
+                        <button type="button" onclick="quickClientLogin('${p.code}')" class="px-3 py-1.5 rounded-lg bg-white hover:border-champagne border border-charcoal/15 font-mono text-xs font-bold text-charcoal">
+                            ${p.code} (${p.clientName})
+                        </button>
+                    `).join('');
+                }
+            }
+            const staffDemoBox = document.getElementById('staff-demo-login-box');
+            if (staffDemoBox) {
+                staffDemoBox.classList.toggle('hidden', !!priv.hideDemoButtons);
             }
             updateDemoPinMasks();
             switchAuthTab(tab);
@@ -1777,6 +1914,8 @@
         }
 
         function closeAuthModal() {
+            pendingTargetRole = null;
+            document.getElementById('role-switch-notice')?.classList.add('hidden');
             document.getElementById('auth-modal')?.classList.add('hidden');
         }
 
@@ -1826,31 +1965,87 @@
                 showToast('PIN tidak valid atau akun tidak aktif.', 'error');
                 return;
             }
+            if (pendingTargetRole && staff.role !== pendingTargetRole) {
+                const roleNames = {
+                    superadmin: 'Super Admin',
+                    admin: 'Admin Operasional',
+                    finance: 'Keuangan / Finance',
+                    production: 'Tim Produksi / Kru'
+                };
+                showToast(`PIN tersebut bukan untuk role ${roleNames[pendingTargetRole] || pendingTargetRole}. Silakan masukkan PIN sesuai role tujuan.`, 'error');
+                if (pinInput) pinInput.value = '';
+                return;
+            }
+            const prevUser = activeStaffUser ? `${activeStaffUser.name} (${activeStaffUser.roleLabel})` : null;
             activeStaffUser = staff;
+            isSuperAdminAuthenticated = staff.role === 'superadmin';
+            pendingTargetRole = null;
             if (pinInput) pinInput.value = '';
             closeAuthModal();
+            applySiteThemeAndHeader();
             setDefaultModuleForRole(staff.role);
             switchMainView('admin');
+            if (prevUser && prevUser !== `${staff.name} (${staff.roleLabel})`) {
+                saveDatabase(staff.name, `Login ulang & beralih role dari ${prevUser} ke ${staff.roleLabel}.`);
+            }
             showToast(`Login berhasil sebagai ${staff.name} (${staff.roleLabel})`);
         }
 
         function demoLoginStaff(role) {
+            const priv = db.siteConfig.privacySettings || DEFAULT_SITE_CONFIG.privacySettings;
+            if (priv.hideDemoButtons) {
+                showToast('Mode privasi aktif. Silakan masukkan PIN 4-digit Anda.', 'error');
+                return;
+            }
+            if (pendingTargetRole && role !== pendingTargetRole) {
+                showToast('Silakan pilih akun atau masukkan PIN sesuai role tujuan.', 'error');
+                return;
+            }
             const staff = db.staff.find(s => s.role === role && s.active) || db.staff[0];
             if (!staff) return;
             activeStaffUser = staff;
+            isSuperAdminAuthenticated = staff.role === 'superadmin';
+            pendingTargetRole = null;
             closeAuthModal();
+            applySiteThemeAndHeader();
             setDefaultModuleForRole(staff.role);
             switchMainView('admin');
             showToast(`Masuk ke workspace ${staff.roleLabel}`);
         }
 
-        function quickSwitchRole(role) {
-            const staff = db.staff.find(s => s.role === role && s.active);
-            if (!staff) return;
-            activeStaffUser = staff;
-            setDefaultModuleForRole(staff.role);
-            renderAdminPortal();
-            showToast(`Beralih role ke ${staff.roleLabel}`);
+        function requestRoleSwitchWithRelogin(targetRole) {
+            const switcher = document.getElementById('quick-role-switcher');
+            if (activeStaffUser && targetRole === activeStaffUser.role) return;
+
+            // Kembalikan dropdown ke role aktif saat ini sampai PIN role baru terverifikasi
+            if (switcher && activeStaffUser) {
+                switcher.value = activeStaffUser.role;
+            }
+
+            const roleNames = {
+                superadmin: 'Super Admin',
+                admin: 'Admin Operasional',
+                finance: 'Keuangan / Finance',
+                production: 'Tim Produksi / Kru'
+            };
+
+            // Akhiri sesi role sebelumnya dan wajibkan login ulang dengan PIN role tujuan
+            activeStaffUser = null;
+            isSuperAdminAuthenticated = false;
+            pendingTargetRole = targetRole;
+            if (isVisualBuilderOpen) toggleVisualBuilder(false);
+            applySiteThemeAndHeader();
+            switchMainView('landing');
+            openAuthModal('staff');
+
+            const notice = document.getElementById('role-switch-notice');
+            const noticeText = document.getElementById('role-switch-notice-text');
+            if (notice && noticeText) {
+                notice.classList.remove('hidden');
+                noticeText.textContent = `Anda keluar dari sesi sebelumnya. Masukkan PIN 4-digit untuk login ulang sebagai ${roleNames[targetRole] || targetRole}.`;
+            }
+            setTimeout(() => document.getElementById('staff-pin-input')?.focus(), 100);
+            showToast(`Sesi ditutup. Silakan login ulang dengan PIN ${roleNames[targetRole] || targetRole}.`);
         }
 
         function setDefaultModuleForRole(role) {
@@ -1878,9 +2073,17 @@
         }
 
         // =====================================================================
-        // SPLIT-SCREEN VISUAL WEB BUILDER DRAWER
+        // SPLIT-SCREEN VISUAL WEB BUILDER DRAWER (SUPER ADMIN ONLY)
         // =====================================================================
         function toggleVisualBuilder(forceState) {
+            if (!isSuperAdminAuthenticated || !activeStaffUser || activeStaffUser.role !== 'superadmin') {
+                isVisualBuilderOpen = false;
+                document.getElementById('visual-builder-drawer')?.classList.add('hidden');
+                document.getElementById('view-landing')?.classList.remove('sm:pl-[430px]');
+                openAuthModal('staff');
+                showToast('Akses Ditolak: Web Builder hanya dapat dibuka oleh Super Admin (PIN).', 'error');
+                return;
+            }
             isVisualBuilderOpen = typeof forceState === 'boolean' ? forceState : !isVisualBuilderOpen;
             const drawer = document.getElementById('visual-builder-drawer');
             const landing = document.getElementById('view-landing');
@@ -1890,6 +2093,10 @@
         }
 
         function openFullCMSFromBuilder() {
+            if (!isSuperAdminAuthenticated) {
+                openAuthModal('staff');
+                return;
+            }
             toggleVisualBuilder(false);
             activeStaffUser = db.staff.find(s => s.role === 'superadmin') || db.staff[0];
             activeAdminModule = 'cms';
@@ -2076,14 +2283,27 @@
         // VIEW 3: MULTI-ROLE ADMIN ERP & SUPER ADMIN CMS
         // =====================================================================
         function renderAdminPortal() {
+            if (!activeStaffUser) {
+                switchMainView('landing');
+                openAuthModal('staff');
+                return;
+            }
             const role = activeStaffUser.role;
             document.getElementById('admin-staff-name').textContent = activeStaffUser.name;
             document.getElementById('admin-staff-role').textContent = `${activeStaffUser.roleLabel} • ${activeStaffUser.division || ''}`;
             const switcher = document.getElementById('quick-role-switcher');
-            if (switcher) switcher.value = role;
+            if (switcher) {
+                switcher.value = role;
+                switcher.classList.remove('hidden');
+            }
+
+            const sidebarBuilderBtn = document.querySelector('#view-admin aside button[onclick*="toggleVisualBuilder"]');
+            if (sidebarBuilderBtn) {
+                sidebarBuilderBtn.classList.toggle('hidden', !isSuperAdminAuthenticated || role !== 'superadmin');
+            }
 
             const navItems = [];
-            if (role === 'superadmin') {
+            if (role === 'superadmin' && isSuperAdminAuthenticated) {
                 navItems.push({ id: 'cms', icon: 'fa-wand-magic-sparkles', label: 'Super Admin Website & CMS' });
             }
             if (role === 'superadmin' || role === 'admin') {
@@ -2124,13 +2344,55 @@
         }
 
         // --- MODULE: PROJECTS, PHOTO STAGES, GOOGLE DRIVE & CLIENT FILE LIST ---
+        function setProjectSelectionStatus(code, statusLabel, suggestedStage) {
+            const proj = db.projects.find(p => p.code === code);
+            if (!proj) return;
+            if (!proj.photoSelection) proj.photoSelection = { quota: 100, selectedFilenamesText: '', revisionNote: '', submittedAt: '', status: '' };
+            proj.photoSelection.status = statusLabel;
+            if (suggestedStage) {
+                proj.stage = suggestedStage;
+            }
+            saveDatabase(`${activeStaffUser.name} (${activeStaffUser.roleLabel})`, `Mengubah status proyek ${proj.code} menjadi "${statusLabel}" (Tahap ${proj.stage}).`);
+            showToast(`Status ${proj.clientName} diubah ke: ${statusLabel}`);
+            renderAdminPortal();
+        }
+
+        function renderStatusButtonsGroup(p) {
+            const currentStatus = (p.photoSelection?.status || '').trim();
+            return `
+                <div class="p-4 rounded-xl bg-ivory border border-charcoal/10 space-y-2.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-charcoalSoft">
+                            <i class="fa-solid fa-sliders text-champagne mr-1"></i> Pilih Status Seleksi / Editing (1-Klik Sinkron ke Klien):
+                        </span>
+                        <span class="px-2.5 py-0.5 rounded-full bg-charcoal text-champagneLight text-[11px] font-semibold">
+                            Aktif: ${currentStatus || 'Belum Dipilih'}
+                        </span>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        ${SELECTION_EDITING_STATUSES.map(st => {
+                            const isSelected = currentStatus.toLowerCase() === st.label.toLowerCase();
+                            return `
+                                <button type="button" onclick="setProjectSelectionStatus('${p.code}', '${st.label}', ${st.stage})" class="px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-all flex items-center gap-1.5 ${
+                                    isSelected ? `${st.activeClass} shadow-sm scale-[1.02]` : `${st.badgeClass} hover:opacity-85`
+                                }">
+                                    ${isSelected ? '<i class="fa-solid fa-circle-check text-[10px]"></i>' : ''}
+                                    <span>${st.label}</span>
+                                </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
         function renderModuleProjectsAndDrive(container) {
             container.innerHTML = `
                 <div class="space-y-6 fade-in">
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <h3 class="font-serif text-2xl font-semibold text-charcoal">Manajemen Proyek, Progres Foto &amp; Google Drive</h3>
-                            <p class="text-xs text-charcoalSoft">Perubahan tahapan, link Google Drive, kuota pilihan, dan catatan studio langsung tampil di Portal Lacak Klien.</p>
+                            <p class="text-xs text-charcoalSoft">Perubahan status tombol, tahapan, link Google Drive, kuota pilihan, dan catatan studio langsung tampil di Portal Lacak Klien.</p>
                         </div>
                     </div>
 
@@ -2156,7 +2418,9 @@
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                                ${renderStatusButtonsGroup(p)}
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                                     <div>
                                         <label class="block text-[11px] font-bold uppercase text-charcoalSoft mb-1">Tahapan Proses Foto (1 - 6)</label>
                                         <select id="proj-stage-${p.code}" class="w-full px-3 py-2.5 rounded-xl bg-ivory border border-charcoal/15 font-semibold">
@@ -2166,10 +2430,6 @@
                                     <div>
                                         <label class="block text-[11px] font-bold uppercase text-charcoalSoft mb-1">Kuota Pilihan Foto Klien</label>
                                         <input type="number" id="proj-quota-${p.code}" value="${p.photoSelection?.quota || 100}" class="w-full px-3 py-2.5 rounded-xl bg-ivory border border-charcoal/15 font-mono">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[11px] font-bold uppercase text-charcoalSoft mb-1">Status Seleksi / Editing</label>
-                                        <input type="text" id="proj-sel-status-${p.code}" value="${p.photoSelection?.status || ''}" class="w-full px-3 py-2.5 rounded-xl bg-ivory border border-charcoal/15">
                                     </div>
                                 </div>
 
@@ -2220,7 +2480,6 @@
             if (!proj) return;
             proj.stage = Number(document.getElementById(`proj-stage-${code}`).value);
             proj.photoSelection.quota = Number(document.getElementById(`proj-quota-${code}`).value || 100);
-            proj.photoSelection.status = document.getElementById(`proj-sel-status-${code}`).value.trim();
             proj.driveLinks.rawPreview = document.getElementById(`proj-drive-raw-${code}`).value.trim();
             proj.driveLinks.finalEdited = document.getElementById(`proj-drive-final-${code}`).value.trim();
             proj.driveLinks.videoTeaser = document.getElementById(`proj-drive-video-${code}`).value.trim();
@@ -2479,43 +2738,48 @@
                     <div class="bg-white p-6 rounded-2xl border border-charcoal/10 shadow-sm space-y-5">
                         <div>
                             <h3 class="font-serif text-2xl font-semibold text-charcoal">Penugasan Tim Foto, Video &amp; Editor Per Proyek</h3>
-                            <p class="text-xs text-charcoalSoft">Tetapkan personil dari masing-masing divisi untuk setiap jadwal klien.</p>
+                            <p class="text-xs text-charcoalSoft">Tetapkan personil dari masing-masing divisi dan perbarui status seleksi/editing untuk setiap jadwal klien.</p>
                         </div>
 
                         <div class="space-y-4">
                             ${db.projects.map(p => `
-                                <div class="p-5 rounded-2xl bg-ivory border border-charcoal/10 grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
-                                    <div class="lg:col-span-3">
-                                        <span class="font-mono text-xs font-bold text-champagneDark">${p.code}</span>
-                                        <h4 class="font-serif text-xl font-semibold text-charcoal">${p.clientName}</h4>
-                                        <p class="text-xs text-charcoalSoft">${p.eventDate} • ${p.location}</p>
+                                <div class="p-5 rounded-2xl bg-ivory border border-charcoal/10 space-y-4">
+                                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+                                        <div class="lg:col-span-3">
+                                            <span class="font-mono text-xs font-bold text-champagneDark">${p.code}</span>
+                                            <h4 class="font-serif text-xl font-semibold text-charcoal">${p.clientName}</h4>
+                                            <p class="text-xs text-charcoalSoft">${p.eventDate} • ${p.location}</p>
+                                        </div>
+                                        <div class="lg:col-span-2">
+                                            <label class="block text-[10px] font-bold uppercase text-charcoalSoft mb-1">Tim Foto (Lead)</label>
+                                            <select id="crew-lead-${p.code}" class="w-full px-3 py-2 rounded-xl bg-white border border-charcoal/15 text-xs">
+                                                <option value="Belum Ditugaskan">Belum Ditugaskan</option>
+                                                ${(photoCrew.length ? photoCrew : allCrew).map(st => `<option value="${st.name}" ${p.crew.leadPhotographer === st.name ? 'selected' : ''}>${st.name}</option>`).join('')}
+                                            </select>
+                                        </div>
+                                        <div class="lg:col-span-2">
+                                            <label class="block text-[10px] font-bold uppercase text-charcoalSoft mb-1">Tim Video / Drone</label>
+                                            <select id="crew-sec-${p.code}" class="w-full px-3 py-2 rounded-xl bg-white border border-charcoal/15 text-xs">
+                                                <option value="Belum Ditugaskan">Belum Ditugaskan</option>
+                                                ${(videoCrew.length ? videoCrew : allCrew).map(st => `<option value="${st.name}" ${p.crew.secondPhotographer === st.name ? 'selected' : ''}>${st.name}</option>`).join('')}
+                                            </select>
+                                        </div>
+                                        <div class="lg:col-span-2">
+                                            <label class="block text-[10px] font-bold uppercase text-charcoalSoft mb-1">Editor &amp; Colorist</label>
+                                            <select id="crew-ed-${p.code}" class="w-full px-3 py-2 rounded-xl bg-white border border-charcoal/15 text-xs">
+                                                <option value="Belum Ditugaskan">Belum Ditugaskan</option>
+                                                ${(editorCrew.length ? editorCrew : allCrew).map(st => `<option value="${st.name}" ${p.crew.editor === st.name ? 'selected' : ''}>${st.name}</option>`).join('')}
+                                            </select>
+                                        </div>
+                                        <div class="lg:col-span-3 flex gap-2">
+                                            <input type="text" id="crew-status-${p.code}" value="${p.crew.taskStatus}" class="w-full px-3 py-2 rounded-xl bg-white border border-charcoal/15 text-xs" placeholder="Catatan progres kru...">
+                                            <button type="button" onclick="saveCrewAssignment('${p.code}')" class="px-4 py-2 rounded-xl bg-charcoal hover:bg-champagne text-white text-xs font-semibold whitespace-nowrap">
+                                                Simpan
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class="lg:col-span-2">
-                                        <label class="block text-[10px] font-bold uppercase text-charcoalSoft mb-1">Tim Foto (Lead)</label>
-                                        <select id="crew-lead-${p.code}" class="w-full px-3 py-2 rounded-xl bg-white border border-charcoal/15 text-xs">
-                                            <option value="Belum Ditugaskan">Belum Ditugaskan</option>
-                                            ${(photoCrew.length ? photoCrew : allCrew).map(st => `<option value="${st.name}" ${p.crew.leadPhotographer === st.name ? 'selected' : ''}>${st.name}</option>`).join('')}
-                                        </select>
-                                    </div>
-                                    <div class="lg:col-span-2">
-                                        <label class="block text-[10px] font-bold uppercase text-charcoalSoft mb-1">Tim Video / Drone</label>
-                                        <select id="crew-sec-${p.code}" class="w-full px-3 py-2 rounded-xl bg-white border border-charcoal/15 text-xs">
-                                            <option value="Belum Ditugaskan">Belum Ditugaskan</option>
-                                            ${(videoCrew.length ? videoCrew : allCrew).map(st => `<option value="${st.name}" ${p.crew.secondPhotographer === st.name ? 'selected' : ''}>${st.name}</option>`).join('')}
-                                        </select>
-                                    </div>
-                                    <div class="lg:col-span-2">
-                                        <label class="block text-[10px] font-bold uppercase text-charcoalSoft mb-1">Editor &amp; Colorist</label>
-                                        <select id="crew-ed-${p.code}" class="w-full px-3 py-2 rounded-xl bg-white border border-charcoal/15 text-xs">
-                                            <option value="Belum Ditugaskan">Belum Ditugaskan</option>
-                                            ${(editorCrew.length ? editorCrew : allCrew).map(st => `<option value="${st.name}" ${p.crew.editor === st.name ? 'selected' : ''}>${st.name}</option>`).join('')}
-                                        </select>
-                                    </div>
-                                    <div class="lg:col-span-3 flex gap-2">
-                                        <input type="text" id="crew-status-${p.code}" value="${p.crew.taskStatus}" class="w-full px-3 py-2 rounded-xl bg-white border border-charcoal/15 text-xs" placeholder="Status tugas...">
-                                        <button type="button" onclick="saveCrewAssignment('${p.code}')" class="px-4 py-2 rounded-xl bg-charcoal hover:bg-champagne text-white text-xs font-semibold whitespace-nowrap">
-                                            Simpan
-                                        </button>
+                                    <div class="bg-white rounded-xl">
+                                        ${renderStatusButtonsGroup(p)}
                                     </div>
                                 </div>
                             `).join('')}
@@ -2562,6 +2826,7 @@
                                             <i class="fa-solid fa-file-invoice mr-1.5"></i> Cetak Invoice Digital
                                         </button>
                                     </div>
+                                    ${renderStatusButtonsGroup(p)}
                                     <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs items-end">
                                         <div>
                                             <label class="block text-[10px] font-bold uppercase text-charcoalSoft mb-1">Total Tagihan</label>
@@ -2689,6 +2954,7 @@
 
         function renderCMSTabTheme(body) {
             const cfg = db.siteConfig;
+            const priv = cfg.privacySettings || DEFAULT_SITE_CONFIG.privacySettings;
             body.innerHTML = `
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-white p-6 rounded-2xl border border-charcoal/10 shadow-sm space-y-4">
@@ -2720,6 +2986,30 @@
                                         <span>${tp.name}</span>
                                     </button>
                                 `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-charcoal/10 space-y-3 text-xs">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-bold text-charcoal uppercase tracking-wider"><i class="fa-solid fa-shield-halved text-champagne mr-1.5"></i>Privasi &amp; Keamanan Akses Website</h4>
+                                    <p class="text-[11px] text-charcoalSoft">Web Builder terkunci eksklusif untuk Super Admin. Aktifkan mode privat untuk mengunci halaman publik dengan kata sandi.</p>
+                                </div>
+                                <button type="button" onclick="logoutStaffSession()" class="px-3 py-1.5 rounded-xl bg-red-50 text-red-700 hover:bg-red-600 hover:text-white font-semibold whitespace-nowrap transition-colors">
+                                    Keluar Sesi Admin
+                                </button>
+                            </div>
+                            <label class="p-3 rounded-xl bg-ivory border border-charcoal/15 flex items-center justify-between cursor-pointer">
+                                <span class="font-semibold text-charcoal">Kunci Website Publik (Mode Privat Berpassword)</span>
+                                <input type="checkbox" ${priv.isPrivateSite ? 'checked' : ''} onchange="db.siteConfig.privacySettings.isPrivateSite=this.checked; if(this.checked){isPrivateSiteUnlocked=false;} applySiteThemeAndHeader(); saveDatabase('Super Admin', 'Mengubah status privasi website.'); showToast(this.checked ? 'Website dikunci ke Mode Privat!' : 'Website dibuka untuk Publik.');">
+                            </label>
+                            <label class="p-3 rounded-xl bg-ivory border border-charcoal/15 flex items-center justify-between cursor-pointer">
+                                <span class="font-semibold text-charcoal">Sembunyikan Tombol 1-Klik Demo Login di Halaman Masuk</span>
+                                <input type="checkbox" ${priv.hideDemoButtons ? 'checked' : ''} onchange="db.siteConfig.privacySettings.hideDemoButtons=this.checked; saveDatabase('Super Admin', 'Mengubah visibilitas tombol demo login.'); showToast('Pengaturan privasi login diperbarui!');">
+                            </label>
+                            <div>
+                                <label class="block font-semibold text-charcoalSoft mb-1">Kata Sandi Akses Tamu (Saat Mode Privat Aktif)</label>
+                                <input type="text" value="${priv.sitePasscode || 'TIARE2026'}" oninput="db.siteConfig.privacySettings.sitePasscode=this.value; saveDatabase();" class="w-full px-3 py-2 rounded-xl bg-ivory border border-charcoal/15 font-mono font-bold">
                             </div>
                         </div>
                     </div>
