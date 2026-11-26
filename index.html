@@ -944,104 +944,52 @@
         let isVisualBuilderOpen = false;
         let activeBuilderTab = 'header_hero';
         let activeCrewDivisionFilter = 'Semua';
+        let crewProjectScopeFilter = 'mine'; // 'mine' (tugas kru yang login) | 'all' (semua jadwal tim)
         let revealedPinsMap = {};
         let showDemoPins = false;
         let editingCrewId = null;
+        let editingProjectCode = null;
+        let deletingProjectCode = null;
         let pendingTargetRole = null;
+        let pendingTransferProofDataUrl = '';
+        let pendingTransferProofFileName = '';
 
-        /**
-         * Loads and normalizes database from localStorage with defensive fallbacks.
-         */
-        function normalizeDatabaseShape(parsed) {
-            // Safely merge nested config and ensure core collections are valid arrays
-            const base = JSON.parse(JSON.stringify(DEFAULT_DB));
-            if (!parsed || typeof parsed !== 'object') return base;
-
-            const mergedConfig = {
-                ...JSON.parse(JSON.stringify(DEFAULT_SITE_CONFIG)),
-                ...(parsed.siteConfig && typeof parsed.siteConfig === 'object' ? parsed.siteConfig : {})
-            };
-            mergedConfig.theme = {
-                ...DEFAULT_SITE_CONFIG.theme,
-                ...(mergedConfig.theme && typeof mergedConfig.theme === 'object' ? mergedConfig.theme : {})
-            };
-            mergedConfig.bookingSettings = {
-                ...DEFAULT_SITE_CONFIG.bookingSettings,
-                ...(mergedConfig.bookingSettings && typeof mergedConfig.bookingSettings === 'object' ? mergedConfig.bookingSettings : {})
-            };
-            mergedConfig.privacySettings = {
-                ...DEFAULT_SITE_CONFIG.privacySettings,
-                ...(mergedConfig.privacySettings && typeof mergedConfig.privacySettings === 'object' ? mergedConfig.privacySettings : {})
-            };
-
-            const normalizedStaff = Array.isArray(parsed.staff)
-                ? parsed.staff.map(s => ({
-                    division: s.role === 'production' ? 'Tim Foto' : (s.role === 'admin' ? 'Koordinator Lapangan' : 'Manajemen'),
-                    location: 'Surabaya & Sekitarnya',
-                    phone: '081234567890',
-                    jobDesk: 'Bertanggung jawab menjalankan standar pelayanan dan produksi studio sesuai divisi.',
-                    sop: '1. Koordinasi jadwal H-2.\n2. Laporan hasil kerja & backup data tepat waktu.',
-                    ...s,
-                    name: s.id === 'STF-01' ? 'Giofani' : s.name
-                }))
-                : base.staff;
-
-            const normalizedProjects = Array.isArray(parsed.projects)
-                ? parsed.projects.map(p => ({
-                    ...p,
-                    stage: Number.isFinite(Number(p.stage)) ? Number(p.stage) : 1,
-                    totalAmount: Number.isFinite(Number(p.totalAmount)) ? Number(p.totalAmount) : 0,
-                    paidAmount: Number.isFinite(Number(p.paidAmount)) ? Number(p.paidAmount) : 0,
-                    driveLinks: {
-                        rawPreview: '',
-                        finalEdited: '',
-                        videoTeaser: '',
-                        ...(p.driveLinks && typeof p.driveLinks === 'object' ? p.driveLinks : {})
-                    },
-                    photoSelection: {
-                        quota: 100,
-                        selectedFilenamesText: '',
-                        revisionNote: '',
-                        submittedAt: '',
-                        status: 'Sudah Booking',
-                        ...(p.photoSelection && typeof p.photoSelection === 'object' ? p.photoSelection : {})
-                    },
-                    crew: {
-                        leadPhotographer: 'Belum Ditugaskan',
-                        secondPhotographer: 'Belum Ditugaskan',
-                        editor: 'Belum Ditugaskan',
-                        taskStatus: 'Terjadwal',
-                        ...(p.crew && typeof p.crew === 'object' ? p.crew : {})
-                    },
-                    expenses: Array.isArray(p.expenses) ? p.expenses : []
-                }))
-                : base.projects;
-
-            const normalizedLogs = Array.isArray(parsed.auditLogs) ? parsed.auditLogs : base.auditLogs;
-
-            return {
-                siteConfig: mergedConfig,
-                staff: normalizedStaff,
-                projects: normalizedProjects,
-                auditLogs: normalizedLogs
-            };
-        }
-
+        // =====================================================================
+        // DATABASE & CLOUD SYNC ENGINE
+        // =====================================================================
         function loadDatabase() {
             try {
                 const raw = localStorage.getItem(STORAGE_KEY);
                 if (!raw) return JSON.parse(JSON.stringify(DEFAULT_DB));
                 const parsed = JSON.parse(raw);
-                return normalizeDatabaseShape(parsed);
+                parsed.siteConfig = { ...JSON.parse(JSON.stringify(DEFAULT_SITE_CONFIG)), ...(parsed.siteConfig || {}) };
+                parsed.siteConfig.theme = { ...DEFAULT_SITE_CONFIG.theme, ...(parsed.siteConfig.theme || {}) };
+                parsed.siteConfig.bookingSettings = { ...DEFAULT_SITE_CONFIG.bookingSettings, ...(parsed.siteConfig.bookingSettings || {}) };
+                parsed.siteConfig.privacySettings = { ...DEFAULT_SITE_CONFIG.privacySettings, ...(parsed.siteConfig.privacySettings || {}) };
+                if (Array.isArray(parsed.staff)) {
+                    parsed.staff = parsed.staff.map(s => {
+                        const base = {
+                            division: s.role === 'production' ? 'Tim Foto' : (s.role === 'admin' ? 'Koordinator Lapangan' : 'Manajemen'),
+                            location: 'Surabaya & Sekitarnya',
+                            phone: '081234567890',
+                            jobDesk: 'Bertanggung jawab menjalankan standar pelayanan dan produksi studio sesuai divisi.',
+                            sop: '1. Koordinasi jadwal H-2.\n2. Laporan hasil kerja & backup data tepat waktu.',
+                            ...s
+                        };
+                        if (base.id === 'STF-01') base.name = 'Giofani';
+                        return base;
+                    });
+                } else {
+                    parsed.staff = JSON.parse(JSON.stringify(DEFAULT_DB.staff));
+                }
+                if (!Array.isArray(parsed.projects)) parsed.projects = JSON.parse(JSON.stringify(DEFAULT_DB.projects));
+                if (!Array.isArray(parsed.auditLogs)) parsed.auditLogs = JSON.parse(JSON.stringify(DEFAULT_DB.auditLogs));
+                return parsed;
             } catch (err) {
-                console.warn('Database fallback triggered:', err);
                 return JSON.parse(JSON.stringify(DEFAULT_DB));
             }
         }
 
-        /**
-         * Persists state changes to localStorage and optionally pushes to Apps Script webhook.
-         */
         function saveDatabase(actor = '', action = '') {
             if (actor && action) {
                 const now = new Date();
@@ -1085,16 +1033,20 @@
             try {
                 const res = await fetch(url + (url.includes('?') ? '&' : '?') + 'action=sync_down');
                 const data = await res.json();
-                if (data && typeof data === 'object' && (Array.isArray(data.projects) || (data.siteConfig && typeof data.siteConfig === 'object'))) {
-                    db = normalizeDatabaseShape(data);
+                if (data && Array.isArray(data.projects) && data.siteConfig) {
+                    db = data;
+                    db.siteConfig = { ...JSON.parse(JSON.stringify(DEFAULT_SITE_CONFIG)), ...(db.siteConfig || {}) };
+                    db.siteConfig.theme = { ...DEFAULT_SITE_CONFIG.theme, ...(db.siteConfig.theme || {}) };
+                    db.siteConfig.bookingSettings = { ...DEFAULT_SITE_CONFIG.bookingSettings, ...(db.siteConfig.bookingSettings || {}) };
+                    db.siteConfig.privacySettings = { ...DEFAULT_SITE_CONFIG.privacySettings, ...(db.siteConfig.privacySettings || {}) };
+                    if (!Array.isArray(db.staff)) db.staff = JSON.parse(JSON.stringify(DEFAULT_DB.staff));
+                    if (!Array.isArray(db.auditLogs)) db.auditLogs = [];
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
                     applySiteThemeAndHeader();
                     if (activeMainView === 'landing') renderLandingSections();
                     if (activeMainView === 'client') renderClientPortal();
                     if (activeMainView === 'admin') renderAdminPortal();
                     if (!silent) showToast('Data terbaru berhasil ditarik dari Google Cloud!');
-                } else if (!silent) {
-                    showToast('Format data dari Cloud tidak lengkap.', 'error');
                 }
             } catch (e) {
                 if (!silent) showToast('Gagal menarik data cloud. Periksa URL Web App.', 'error');
@@ -1117,9 +1069,6 @@
             setTimeout(() => { el.remove(); }, 3500);
         }
 
-        /**
-         * Applies CSS custom properties, brand header/footer text, privacy lock, and builder visibility.
-         */
         function applySiteThemeAndHeader() {
             const cfg = db.siteConfig;
             const t = cfg.theme || DEFAULT_SITE_CONFIG.theme;
@@ -1212,7 +1161,6 @@
             activeStaffUser = null;
             isSuperAdminAuthenticated = false;
             isBuilderUnlockedInSession = false;
-            pendingTargetRole = null;
             if (isVisualBuilderOpen) toggleVisualBuilder(false);
             applySiteThemeAndHeader();
             switchMainView('landing');
@@ -1267,44 +1215,32 @@
                     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     el.focus();
                 }
-            }, 80);
+            }, 60);
         }
 
-        /**
-         * Updates active underline styling in desktop & mobile storefront navigation.
-         */
-        function updatePublicNavActiveState() {
-            document.querySelectorAll('#desktop-main-nav [data-nav-page]').forEach(link => {
-                const page = link.dataset.navPage;
-                const isActive = page === activePublicPage;
-                link.classList.toggle('border-champagne', isActive);
-                link.classList.toggle('text-champagneDark', isActive);
-                link.classList.toggle('border-transparent', !isActive);
+        function updatePublicNavHighlight() {
+            document.querySelectorAll('#desktop-main-nav a[data-nav-page]').forEach(link => {
+                const isActive = link.dataset.navPage === activePublicPage;
+                link.className = isActive
+                    ? 'pb-1 border-b border-champagne text-champagneDark'
+                    : 'pb-1 border-b border-transparent hover:border-champagne hover:text-champagneDark transition-colors';
             });
-            document.querySelectorAll('#mobile-nav-drawer [data-mobile-page]').forEach(link => {
-                const page = link.dataset.mobilePage;
-                const isActive = page === activePublicPage;
-                link.classList.toggle('text-champagneDark', isActive);
-                link.classList.toggle('font-semibold', isActive);
-                link.classList.toggle('text-charcoal', !isActive);
+            document.querySelectorAll('#mobile-nav-drawer a[data-mobile-page]').forEach(link => {
+                const isActive = link.dataset.mobilePage === activePublicPage;
+                link.className = isActive
+                    ? 'block py-1.5 text-champagneDark font-semibold'
+                    : 'block py-1.5 text-charcoal';
             });
         }
 
-        /**
-         * Switches between separate storefront pages:
-         * - 'home': Main dashboard (Hero, Press, Showcase, Gallery + quick menu cards)
-         * - 'packages': Dedicated Packages & Pricelist page
-         * - 'booking': Dedicated Booking & Google Drive Sync page
-         */
-        function openPublicPage(page, anchorId = '') {
+        function openPublicPage(page = 'home', anchorId = '') {
             activePublicPage = page;
             if (activeMainView !== 'landing') {
                 switchMainView('landing');
             } else {
                 renderLandingSections();
             }
-            updatePublicNavActiveState();
-
+            updatePublicNavHighlight();
             if (anchorId) {
                 setTimeout(() => {
                     document.getElementById(anchorId)?.scrollIntoView({ behavior: 'smooth' });
@@ -1320,27 +1256,29 @@
         }
 
         // =====================================================================
-        // RENDER STOREFRONT SECTIONS (SEPARATE HOME, PRICELIST & BOOKING MENUS)
+        // RENDER STOREFRONT SECTIONS & SEPARATE PRICELIST / BOOKING PAGES
         // =====================================================================
         function renderLandingSections() {
             const container = document.getElementById('landing-sections-container');
             if (!container) return;
             const cfg = db.siteConfig;
-            const sections = cfg.sectionsOrder || DEFAULT_SITE_CONFIG.sectionsOrder;
-            updatePublicNavActiveState();
+            updatePublicNavHighlight();
 
-            // Dedicated Menu 1: Packages & Pricelist
             if (activePublicPage === 'packages') {
                 container.innerHTML = `
-                    <div class="bg-ivoryWarm border-b border-charcoal/10">
-                        <div class="max-w-6xl mx-auto px-4 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-3 text-xs">
-                            <button type="button" onclick="openPublicPage('home')" class="inline-flex items-center gap-2 text-charcoal hover:text-champagneDark font-semibold uppercase tracking-wider">
-                                <i class="fa-solid fa-arrow-left text-champagne"></i> Kembali ke Beranda Utama
-                            </button>
-                            <div class="flex items-center gap-3">
-                                <span class="text-charcoalSoft">Menu Khusus: <strong class="text-charcoal">Packages &amp; Pricelist</strong></span>
-                                <button type="button" onclick="openPublicPage('booking')" class="px-4 py-2 bg-champagne hover:bg-champagneDark text-white font-semibold uppercase tracking-wider">
-                                    Ke Menu Booking <i class="fa-solid fa-arrow-right ml-1"></i>
+                    <div class="bg-ivoryWarm/60 border-b border-charcoal/10">
+                        <div class="max-w-6xl mx-auto px-4 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-2 text-xs">
+                            <div class="flex items-center gap-2 text-charcoalSoft">
+                                <button type="button" onclick="openPublicPage('home')" class="hover:text-charcoal font-medium">Home</button>
+                                <span>/</span>
+                                <span class="text-champagneDark font-semibold">Packages &amp; Pricelist</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="openPublicPage('booking')" class="px-4 py-1.5 bg-champagne hover:bg-champagneDark text-white text-[11px] uppercase tracking-wider font-semibold transition-colors">
+                                    Lanjut ke Form Booking &rarr;
+                                </button>
+                                <button type="button" onclick="openPublicPage('home')" class="px-4 py-1.5 bg-white border border-charcoal/15 hover:border-champagne text-charcoal text-[11px] uppercase tracking-wider font-semibold transition-colors">
+                                    &larr; Beranda
                                 </button>
                             </div>
                         </div>
@@ -1350,37 +1288,43 @@
                 return;
             }
 
-            // Dedicated Menu 2: Booking & Google Drive Sync
             if (activePublicPage === 'booking') {
                 container.innerHTML = `
                     <div class="bg-white border-b border-charcoal/10">
-                        <div class="max-w-5xl mx-auto px-4 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-3 text-xs">
-                            <button type="button" onclick="openPublicPage('home')" class="inline-flex items-center gap-2 text-charcoal hover:text-champagneDark font-semibold uppercase tracking-wider">
-                                <i class="fa-solid fa-arrow-left text-champagne"></i> Kembali ke Beranda Utama
-                            </button>
-                            <div class="flex items-center gap-3">
-                                <span class="text-charcoalSoft">Menu Khusus: <strong class="text-charcoal">Booking &amp; Reservasi</strong></span>
-                                <button type="button" onclick="openPublicPage('packages')" class="px-4 py-2 bg-ivory border border-charcoal/20 hover:border-champagne text-charcoal font-semibold uppercase tracking-wider">
-                                    Lihat Pricelist Paket
+                        <div class="max-w-5xl mx-auto px-4 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-2 text-xs">
+                            <div class="flex items-center gap-2 text-charcoalSoft">
+                                <button type="button" onclick="openPublicPage('home')" class="hover:text-charcoal font-medium">Home</button>
+                                <span>/</span>
+                                <button type="button" onclick="openPublicPage('packages')" class="hover:text-charcoal font-medium">Pricelist</button>
+                                <span>/</span>
+                                <span class="text-champagneDark font-semibold">Booking &amp; Google Drive</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="openPublicPage('packages')" class="px-4 py-1.5 bg-ivory border border-charcoal/15 hover:border-champagne text-charcoal text-[11px] uppercase tracking-wider font-semibold transition-colors">
+                                    Lihat Pricelist
+                                </button>
+                                <button type="button" onclick="openPublicPage('home')" class="px-4 py-1.5 bg-charcoal text-white text-[11px] uppercase tracking-wider font-semibold transition-colors">
+                                    &larr; Beranda
                                 </button>
                             </div>
                         </div>
                     </div>
                     ${buildUnifiedBookingSectionHTML(cfg)}
                 `;
-                const sel = document.getElementById('booking-package-select');
-                if (sel && selectedBookingPackageName) {
-                    sel.value = selectedBookingPackageName;
+                if (selectedBookingPackageName) {
+                    const sel = document.getElementById('booking-package-select');
+                    if (sel) sel.value = selectedBookingPackageName;
                 }
-                const locInp = document.getElementById('booking-location');
-                if (locInp && selectedBookingLocation) {
-                    locInp.value = selectedBookingLocation;
+                if (selectedBookingLocation) {
+                    const locInput = document.getElementById('booking-location');
+                    if (locInput) locInput.value = selectedBookingLocation;
                 }
                 recalculateBookingTotal();
                 return;
             }
 
-            // Main Dashboard ('home'): Only editorial sections (Pricelist & Booking are hidden here and placed in their own menus)
+            // Home dashboard displays only editorial overview sections (Pricelist & Booking have their own menus)
+            const sections = cfg.sectionsOrder || DEFAULT_SITE_CONFIG.sectionsOrder;
             let html = '';
             sections.forEach(sec => {
                 if (!sec.visible) return;
@@ -1389,33 +1333,6 @@
                 else if (sec.id === 'showcase') html += buildShowcaseSectionHTML(cfg);
                 else if (sec.id === 'gallery') html += buildGallerySectionHTML(cfg);
             });
-
-            html += `
-                <section class="bg-white border-t border-charcoal/10 py-16">
-                    <div class="max-w-5xl mx-auto px-4 sm:px-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="p-8 bg-ivory border border-champagne/30 luxury-card flex flex-col justify-between space-y-4">
-                            <div class="space-y-2">
-                                <span class="text-[10px] uppercase tracking-[0.28em] text-champagne font-bold">Menu Khusus Paket</span>
-                                <h3 class="font-serif text-3xl text-charcoal">Packages &amp; Pricelist</h3>
-                                <p class="text-xs text-charcoalSoft leading-relaxed">Lihat daftar lengkap paket Prewedding Editorial &amp; Wedding Day Liputan beserta rincian fasilitas di halaman khusus.</p>
-                            </div>
-                            <button type="button" onclick="openPublicPage('packages')" class="self-start px-6 py-3 bg-charcoal hover:bg-champagne text-white text-xs font-semibold uppercase tracking-[0.2em] transition-colors">
-                                Buka Menu Pricelist <i class="fa-solid fa-arrow-right ml-1.5"></i>
-                            </button>
-                        </div>
-                        <div class="p-8 bg-ivory border border-champagne/30 luxury-card flex flex-col justify-between space-y-4">
-                            <div class="space-y-2">
-                                <span class="text-[10px] uppercase tracking-[0.28em] text-champagne font-bold">Menu Khusus Reservasi</span>
-                                <h3 class="font-serif text-3xl text-charcoal">Booking &amp; Google Drive Sync</h3>
-                                <p class="text-xs text-charcoalSoft leading-relaxed">Isi formulir reservasi jadwal pemotretan, pilih add-ons, dan dapatkan Kode Lacak Klien otomatis.</p>
-                            </div>
-                            <button type="button" onclick="openPublicPage('booking')" class="self-start px-6 py-3 bg-champagne hover:bg-champagneDark text-white text-xs font-semibold uppercase tracking-[0.2em] transition-colors">
-                                Buka Menu Booking <i class="fa-solid fa-arrow-right ml-1.5"></i>
-                            </button>
-                        </div>
-                    </div>
-                </section>
-            `;
             container.innerHTML = html;
         }
 
@@ -1430,7 +1347,7 @@
                         const isActive = idx === currentHeroSlideIndex;
                         return `
                             <div data-hero-slide="${idx}" class="absolute inset-0 transition-opacity duration-1000 ease-in-out ${isActive ? 'opacity-100 z-0' : 'opacity-0 -z-10 pointer-events-none'}">
-                                <img src="${s.image}" alt="${s.title}" class="hero-kenburns w-full h-full object-cover opacity-85" onerror="this.src='https://placehold.co/1600x900/2b2620/ffffff?text=OLORIS+PICTURE'">
+                                <img src="${s.image}" alt="${s.title}" class="hero-kenburns w-full h-full object-cover opacity-85" onerror="this.src='https://placehold.co/1600x900/2b2620/ffffff?text=Oloris+Picture'">
                             </div>
                         `;
                     }).join('')}
@@ -1447,10 +1364,10 @@
 
                     <button type="button" onclick="changeHeroSlide(-1)" class="hidden sm:flex absolute left-10 z-20 items-center gap-2.5 text-white/85 hover:text-white text-xs tracking-[0.25em] group">
                         <span class="w-10 h-10 rounded-full border border-white/35 bg-black/15 backdrop-blur-sm group-hover:border-white group-hover:bg-champagne/80 flex items-center justify-center transition-all"><i class="fa-solid fa-chevron-left text-xs"></i></span>
-                        <span data-hero-counter>0${currentHeroSlideIndex + 1} / 0${slides.length}</span>
+                        <span class="hero-counter-label">0${currentHeroSlideIndex + 1} / 0${slides.length}</span>
                     </button>
                     <button type="button" onclick="changeHeroSlide(1)" class="hidden sm:flex absolute right-10 z-20 items-center gap-2.5 text-white/85 hover:text-white text-xs tracking-[0.25em] group">
-                        <span data-hero-counter>0${currentHeroSlideIndex + 1} / 0${slides.length}</span>
+                        <span class="hero-counter-label">0${currentHeroSlideIndex + 1} / 0${slides.length}</span>
                         <span class="w-10 h-10 rounded-full border border-white/35 bg-black/15 backdrop-blur-sm group-hover:border-white group-hover:bg-champagne/80 flex items-center justify-center transition-all"><i class="fa-solid fa-chevron-right text-xs"></i></span>
                     </button>
 
@@ -1459,12 +1376,12 @@
                             <span class="w-1.5 h-1.5 rounded-full bg-champagneLight animate-pulse"></span>
                             <span>Fine-Art Wedding &amp; Editorial House</span>
                         </div>
-                        <h1 id="hero-slide-title" class="hero-title-animate font-serif text-4xl sm:text-6xl md:text-[68px] font-normal uppercase tracking-[0.26em] leading-[1.1] drop-shadow-sm">
+                        <h1 id="hero-active-title" class="hero-title-animate font-serif text-4xl sm:text-6xl md:text-[68px] font-normal uppercase tracking-[0.26em] leading-[1.1] drop-shadow-sm">
                             ${slide.title}
                         </h1>
                         <div class="flex items-center justify-center gap-4 text-white/95 fade-in">
                             <span class="w-12 sm:w-20 h-[1px] bg-gradient-to-r from-transparent to-white/80"></span>
-                            <p id="hero-slide-subtitle" class="font-serif italic text-lg sm:text-2xl tracking-wide">${slide.subtitle}</p>
+                            <p id="hero-active-subtitle" class="font-serif italic text-lg sm:text-2xl tracking-wide">${slide.subtitle}</p>
                             <span class="w-12 sm:w-20 h-[1px] bg-gradient-to-l from-transparent to-white/80"></span>
                         </div>
 
@@ -1493,9 +1410,9 @@
                     </div>
 
                     <div class="absolute bottom-7 inset-x-0 z-20 flex flex-col items-center gap-3">
-                        <div class="flex items-center gap-2.5">
+                        <div id="hero-dots-container" class="flex items-center gap-2.5">
                             ${slides.map((s, idx) => `
-                                <button type="button" onclick="goToHeroSlide(${idx})" data-hero-dot="${idx}" aria-label="Slide ${idx + 1}" class="h-2 rounded-full transition-all duration-300 ${
+                                <button type="button" onclick="goToHeroSlide(${idx})" aria-label="Slide ${idx + 1}" class="h-2 rounded-full transition-all duration-300 ${
                                     idx === currentHeroSlideIndex ? 'w-8 bg-champagneLight' : 'w-2 bg-white/45 hover:bg-white/80'
                                 }"></button>
                             `).join('')}
@@ -1508,21 +1425,6 @@
             `;
         }
 
-        let heroTouchStartX = 0;
-        function handleHeroTouchStart(e) {
-            heroTouchStartX = e.changedTouches[0].screenX;
-        }
-        function handleHeroTouchEnd(e) {
-            const diff = e.changedTouches[0].screenX - heroTouchStartX;
-            if (Math.abs(diff) > 45) {
-                changeHeroSlide(diff < 0 ? 1 : -1);
-            }
-        }
-
-        /**
-         * Updates only the hero slide DOM elements without re-rendering #landing-sections-container,
-         * preserving user input inside the booking form and search bar during autoplay transitions.
-         */
         function syncHeroSlideDOM() {
             const slides = db.siteConfig.heroSlides || DEFAULT_SITE_CONFIG.heroSlides;
             if (!slides.length) return;
@@ -1538,34 +1440,45 @@
                 el.classList.toggle('pointer-events-none', !isActive);
             });
 
-            const titleEl = document.getElementById('hero-slide-title');
+            document.querySelectorAll('.hero-counter-label').forEach(el => {
+                el.textContent = `0${currentHeroSlideIndex + 1} / 0${slides.length}`;
+            });
+
+            const titleEl = document.getElementById('hero-active-title');
+            const subEl = document.getElementById('hero-active-subtitle');
             if (titleEl) {
                 titleEl.textContent = slide.title;
                 titleEl.classList.remove('hero-title-animate');
                 void titleEl.offsetWidth;
                 titleEl.classList.add('hero-title-animate');
             }
-
-            const subEl = document.getElementById('hero-slide-subtitle');
             if (subEl) subEl.textContent = slide.subtitle;
 
-            document.querySelectorAll('[data-hero-counter]').forEach(el => {
-                el.textContent = `0${currentHeroSlideIndex + 1} / 0${slides.length}`;
-            });
-
-            document.querySelectorAll('[data-hero-dot]').forEach((el, idx) => {
-                const isActive = idx === currentHeroSlideIndex;
-                el.classList.toggle('w-8', isActive);
-                el.classList.toggle('bg-champagneLight', isActive);
-                el.classList.toggle('w-2', !isActive);
-                el.classList.toggle('bg-white/45', !isActive);
-            });
+            const dotsEl = document.getElementById('hero-dots-container');
+            if (dotsEl) {
+                dotsEl.innerHTML = slides.map((s, idx) => `
+                    <button type="button" onclick="goToHeroSlide(${idx})" aria-label="Slide ${idx + 1}" class="h-2 rounded-full transition-all duration-300 ${
+                        idx === currentHeroSlideIndex ? 'w-8 bg-champagneLight' : 'w-2 bg-white/45 hover:bg-white/80'
+                    }"></button>
+                `).join('');
+            }
 
             const progEl = document.getElementById('hero-progress-fill');
             if (progEl) {
                 progEl.classList.remove('hero-progress-bar');
                 void progEl.offsetWidth;
                 progEl.classList.add('hero-progress-bar');
+            }
+        }
+
+        let heroTouchStartX = 0;
+        function handleHeroTouchStart(e) {
+            heroTouchStartX = e.changedTouches[0].screenX;
+        }
+        function handleHeroTouchEnd(e) {
+            const diff = e.changedTouches[0].screenX - heroTouchStartX;
+            if (Math.abs(diff) > 45) {
+                changeHeroSlide(diff < 0 ? 1 : -1);
             }
         }
 
@@ -1586,7 +1499,7 @@
         function startHeroAutoplay() {
             pauseHeroAutoplay();
             heroAutoSlideTimer = setInterval(() => {
-                if (activeMainView === 'landing' && !isVisualBuilderOpen) {
+                if (activeMainView === 'landing' && activePublicPage === 'home' && !isVisualBuilderOpen) {
                     const slides = db.siteConfig.heroSlides || DEFAULT_SITE_CONFIG.heroSlides;
                     currentHeroSlideIndex = (currentHeroSlideIndex + 1) % slides.length;
                     syncHeroSlideDOM();
@@ -1613,7 +1526,7 @@
             openPublicPage('booking');
             showToast(keyword || vendorPkg || location
                 ? `Filter diterapkan: ${[keyword, vendorPkg, location].filter(Boolean).join(' • ')}`
-                : 'Membuka menu khusus Booking & Reservasi');
+                : 'Membuka formulir booking & ketersediaan jadwal');
         }
 
         function buildPressSectionHTML(cfg) {
@@ -1699,7 +1612,7 @@
             const filteredPkgs = cfg.packages.filter(p => p.categoryId === activeLandingPkgCategory);
 
             return `
-                <section id="packages" class="bg-white border-t border-b border-charcoal/10 py-20">
+                <section id="packages" class="bg-white border-b border-charcoal/10 py-16 sm:py-20">
                     <div class="max-w-6xl mx-auto px-4 sm:px-8 space-y-10">
                         <div class="text-center max-w-2xl mx-auto space-y-3">
                             <span class="text-[11px] uppercase tracking-[0.3em] text-champagne font-semibold">Curated Collections</span>
@@ -1753,7 +1666,7 @@
         function choosePackageForBooking(pkgName) {
             selectedBookingPackageName = pkgName;
             openPublicPage('booking');
-            showToast(`Paket "${pkgName}" dipilih di menu Booking.`);
+            showToast(`Paket "${pkgName}" dipilih.`);
         }
 
         function buildGallerySectionHTML(cfg) {
@@ -1768,7 +1681,7 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         ${items.map((item, idx) => `
-                            <div onclick="openLightbox('${item.image}', '${item.title.replace(/'/g, "\\'")}', '${item.category.replace(/'/g, "\\'")}', '${item.location.replace(/'/g, "\\'")}')" class="group cursor-pointer overflow-hidden bg-white border border-charcoal/10 luxury-card ${idx % 2 === 1 ? 'sm:translate-y-4' : ''}">
+                            <div onclick="openLightbox('${item.image}', '${item.title.replace(/'/g, "\\'")}', '${item.category}', '${item.location.replace(/'/g, "\\'")}')" class="group cursor-pointer overflow-hidden bg-white border border-charcoal/10 luxury-card ${idx % 2 === 1 ? 'sm:translate-y-4' : ''}">
                                 <div class="aspect-[3/4] overflow-hidden">
                                     <img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onerror="this.src='https://placehold.co/600x800/EFE9DE/1E1E1E?text=Oloris+Gallery'">
                                 </div>
@@ -1796,11 +1709,57 @@
             document.getElementById('lightbox-modal')?.classList.add('hidden');
         }
 
+        function copyStudioBankAccount() {
+            const bSet = db.siteConfig.bookingSettings || DEFAULT_SITE_CONFIG.bookingSettings;
+            const accNum = bSet.bankAccountNumber || '8820918472';
+            const ta = document.createElement('textarea');
+            ta.value = accNum;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            showToast(`Nomor rekening ${accNum} berhasil disalin!`);
+        }
+
+        function handleTransferProofSelect(input) {
+            const file = input?.files?.[0];
+            const previewWrap = document.getElementById('booking-transfer-preview-wrap');
+            const previewImg = document.getElementById('booking-transfer-preview-img');
+            const previewName = document.getElementById('booking-transfer-preview-name');
+            if (!file) {
+                pendingTransferProofDataUrl = '';
+                pendingTransferProofFileName = '';
+                if (previewWrap) previewWrap.classList.add('hidden');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const img = new Image();
+                img.onload = function() {
+                    const maxW = 1000;
+                    const scale = img.width > maxW ? maxW / img.width : 1;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.round(img.width * scale);
+                    canvas.height = Math.round(img.height * scale);
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    pendingTransferProofDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+                    pendingTransferProofFileName = file.name;
+                    if (previewImg) previewImg.src = pendingTransferProofDataUrl;
+                    if (previewName) previewName.textContent = file.name;
+                    if (previewWrap) previewWrap.classList.remove('hidden');
+                    showToast(`Bukti transfer "${file.name}" siap dilampirkan!`);
+                };
+                img.src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
         function buildUnifiedBookingSectionHTML(cfg) {
             const bSet = cfg.bookingSettings || DEFAULT_SITE_CONFIG.bookingSettings;
             const customFields = cfg.customBookingFields || [];
             return `
-                <section id="booking" class="bg-ivoryWarm border-t border-charcoal/10 py-20">
+                <section id="booking" class="bg-ivoryWarm border-t border-charcoal/10 py-16 sm:py-20">
                     <div class="max-w-5xl mx-auto px-4 sm:px-8 space-y-10">
                         <div class="text-center max-w-2xl mx-auto space-y-3">
                             <span class="text-[11px] uppercase tracking-[0.3em] text-champagne font-semibold">One-Step Studio Reservation</span>
@@ -1831,7 +1790,7 @@
                                     <div>
                                         <label class="block font-semibold uppercase tracking-wider text-charcoalSoft mb-1.5">Pilih Paket Layanan *</label>
                                         <select id="booking-package-select" onchange="recalculateBookingTotal()" class="w-full px-4 py-3 bg-ivory border border-charcoal/15 font-semibold focus:outline-none focus:border-champagne">
-                                            ${cfg.packages.map(p => `<option value="${p.name}" data-price="${p.price}">${p.name} — ${formatRupiah(p.price)}</option>`).join('')}
+                                            ${cfg.packages.map(p => `<option value="${p.name}" data-price="${p.price}">${p.name} &mdash; ${formatRupiah(p.price)}</option>`).join('')}
                                         </select>
                                     </div>
                                     <div>
@@ -1883,50 +1842,42 @@
                                     </div>
                                 </div>
 
-                                <!-- Informasi Rekening Resmi & Upload Bukti Transfer DP -->
-                                <div class="pt-4 border-t border-charcoal/10 grid grid-cols-1 lg:grid-cols-12 gap-5 text-xs">
-                                    <div class="lg:col-span-6 p-5 bg-ivoryWarm border border-champagne/40 space-y-3 flex flex-col justify-between">
-                                        <div class="space-y-1.5">
-                                            <span class="text-[10px] uppercase tracking-[0.22em] text-champagneDark font-bold block">
-                                                <i class="fa-solid fa-building-columns mr-1"></i> Rekening Pembayaran Resmi Studio
+                                <!-- Pembayaran DP & Upload Bukti Transfer -->
+                                <div class="pt-4 border-t border-charcoal/10 grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
+                                    <div class="p-5 bg-ivory border border-champagne/35 space-y-3">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-[11px] font-bold uppercase tracking-wider text-champagneDark">
+                                                <i class="fa-solid fa-building-columns mr-1"></i> Rekening Resmi Studio
                                             </span>
-                                            <h4 class="font-serif text-xl text-charcoal font-semibold">${bSet.bankName || 'Bank Central Asia (BCA)'}</h4>
-                                            <div class="p-3 bg-white border border-charcoal/15 flex items-center justify-between gap-2">
-                                                <div>
-                                                    <span class="text-[10px] text-charcoalSoft block">Nomor Rekening</span>
-                                                    <strong id="booking-bank-acc-text" class="font-mono text-base tracking-wider text-charcoal">${bSet.bankAccountNumber || '8820918472'}</strong>
-                                                </div>
-                                                <button type="button" onclick="copyBookingBankAccount()" class="px-3 py-1.5 bg-charcoal hover:bg-champagne text-white text-[11px] font-semibold uppercase tracking-wider transition-colors">
+                                            <span class="px-2 py-0.5 bg-champagneLight text-champagneDark text-[10px] font-semibold">Transfer DP ${bSet.dpPercentage}%</span>
+                                        </div>
+                                        <div class="p-3.5 bg-white border border-charcoal/10 space-y-1">
+                                            <span class="text-[11px] text-charcoalSoft block">${bSet.bankName || 'Bank Central Asia (BCA)'}</span>
+                                            <div class="flex items-center justify-between gap-2">
+                                                <strong class="font-mono text-lg tracking-wider text-charcoal">${bSet.bankAccountNumber || '8820918472'}</strong>
+                                                <button type="button" onclick="copyStudioBankAccount()" class="px-3 py-1 bg-charcoal hover:bg-champagne text-white text-[10px] uppercase tracking-wider font-semibold transition-colors">
                                                     <i class="fa-regular fa-copy mr-1"></i> Salin
                                                 </button>
                                             </div>
-                                            <p class="text-[11px] text-charcoalSoft pt-0.5">Atas Nama: <strong class="text-charcoal">${bSet.bankAccountHolder || 'OLORIS PICTURE STUDIO'}</strong></p>
+                                            <span class="text-xs font-semibold text-charcoal block">a.n. ${bSet.bankAccountHolder || 'OLORIS PICTURE STUDIO'}</span>
                                         </div>
-                                        <p class="text-[11px] text-charcoalSoft leading-relaxed border-t border-charcoal/10 pt-2.5">
-                                            Silakan transfer minimal sesuai nominal <strong>Estimasi DP (${bSet.dpPercentage}%)</strong> di bawah untuk mengunci tanggal pemotretan Anda.
+                                        <p class="text-[11px] text-charcoalSoft leading-relaxed">
+                                            Silakan transfer DP sesuai estimasi di bawah lalu unggah bukti transfer agar jadwal Anda segera dikunci oleh tim Admin &amp; Finance.
                                         </p>
                                     </div>
 
-                                    <div class="lg:col-span-6 p-5 bg-ivory border border-charcoal/15 space-y-3">
-                                        <label class="block font-semibold uppercase tracking-wider text-charcoalSoft">
-                                            <i class="fa-solid fa-receipt text-champagne mr-1"></i> Upload Foto Bukti Transfer DP (Opsional / Jika Sudah Transfer)
+                                    <div class="p-5 bg-ivory border border-charcoal/15 space-y-3">
+                                        <label for="booking-transfer-file" class="block text-[11px] font-bold uppercase tracking-wider text-charcoalSoft">
+                                            <i class="fa-solid fa-receipt text-champagne mr-1"></i> Upload Foto Bukti Transfer DP (Opsional)
                                         </label>
-                                        <input type="file" id="booking-transfer-file" accept="image/*" onchange="handleTransferProofSelect(this)" class="w-full text-xs bg-white border border-charcoal/15 p-2.5 file:mr-3 file:py-1.5 file:px-3 file:border-0 file:bg-charcoal file:text-white file:text-[11px] file:uppercase file:tracking-wider file:cursor-pointer">
-                                        <input type="hidden" id="booking-transfer-dataurl" value="">
-                                        <input type="hidden" id="booking-transfer-filename" value="">
-                                        <div id="booking-transfer-preview-box" class="hidden p-3 bg-white border border-champagne/40 flex items-center justify-between gap-3">
-                                            <div class="flex items-center gap-3 min-w-0">
-                                                <img id="booking-transfer-preview-img" src="" alt="Preview Bukti Transfer" class="w-14 h-14 object-cover border border-charcoal/15 shrink-0">
-                                                <div class="min-w-0">
-                                                    <span class="text-[10px] font-bold uppercase text-emerald-700 block"><i class="fa-solid fa-circle-check mr-1"></i>Bukti Siap Dilampirkan</span>
-                                                    <p id="booking-transfer-preview-name" class="text-[11px] text-charcoal truncate">bukti_transfer.jpg</p>
-                                                </div>
+                                        <input type="file" id="booking-transfer-file" accept="image/*" onchange="handleTransferProofSelect(this)" class="w-full text-xs bg-white border border-charcoal/15 p-2.5 file:mr-3 file:py-1.5 file:px-3 file:border-0 file:bg-champagne file:text-white file:text-xs file:font-semibold hover:file:bg-champagneDark cursor-pointer">
+                                        <div id="booking-transfer-preview-wrap" class="hidden p-2.5 bg-white border border-emerald-200 flex items-center gap-3">
+                                            <img id="booking-transfer-preview-img" src="" alt="Preview Bukti Transfer" class="w-16 h-16 object-cover border border-charcoal/10">
+                                            <div class="min-w-0 flex-1">
+                                                <span class="text-[11px] font-bold text-emerald-700 block"><i class="fa-solid fa-circle-check mr-1"></i>Foto Bukti Siap Dikirim</span>
+                                                <span id="booking-transfer-preview-name" class="text-[11px] text-charcoalSoft truncate block"></span>
                                             </div>
-                                            <button type="button" onclick="clearTransferProofPreview()" class="px-2.5 py-1.5 bg-red-50 text-red-700 text-[11px] font-semibold hover:bg-red-600 hover:text-white transition-colors">
-                                                Hapus
-                                            </button>
                                         </div>
-                                        <p class="text-[11px] text-charcoalSoft">Format yang didukung: JPG, PNG, WEBP. Bukti transfer akan langsung diteruskan ke tim Keuangan Oloris Picture.</p>
                                     </div>
                                 </div>
 
@@ -1965,62 +1916,6 @@
             const dpEl = document.getElementById('booking-dp-display');
             if (totalEl) totalEl.textContent = formatRupiah(total);
             if (dpEl) dpEl.textContent = `Estimasi DP (${dpPct}%): ${formatRupiah(dp)}`;
-        }
-
-        function copyBookingBankAccount() {
-            const acc = db.siteConfig.bookingSettings?.bankAccountNumber || '8820918472';
-            const ta = document.createElement('textarea');
-            ta.value = acc;
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
-            showToast(`Nomor rekening ${acc} berhasil disalin!`);
-        }
-
-        function handleTransferProofSelect(input) {
-            const file = input?.files?.[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                const img = new Image();
-                img.onload = function() {
-                    const maxW = 900;
-                    const scale = img.width > maxW ? maxW / img.width : 1;
-                    const canvas = document.createElement('canvas');
-                    canvas.width = Math.round(img.width * scale);
-                    canvas.height = Math.round(img.height * scale);
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    const compressed = canvas.toDataURL('image/jpeg', 0.8);
-
-                    const dataEl = document.getElementById('booking-transfer-dataurl');
-                    const nameEl = document.getElementById('booking-transfer-filename');
-                    const boxEl = document.getElementById('booking-transfer-preview-box');
-                    const prevImg = document.getElementById('booking-transfer-preview-img');
-                    const prevName = document.getElementById('booking-transfer-preview-name');
-
-                    if (dataEl) dataEl.value = compressed;
-                    if (nameEl) nameEl.value = file.name;
-                    if (prevImg) prevImg.src = compressed;
-                    if (prevName) prevName.textContent = file.name;
-                    if (boxEl) boxEl.classList.remove('hidden');
-                    showToast(`Bukti transfer "${file.name}" berhasil dipilih.`);
-                };
-                img.src = evt.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function clearTransferProofPreview() {
-            const fileInp = document.getElementById('booking-transfer-file');
-            const dataEl = document.getElementById('booking-transfer-dataurl');
-            const nameEl = document.getElementById('booking-transfer-filename');
-            const boxEl = document.getElementById('booking-transfer-preview-box');
-            if (fileInp) fileInp.value = '';
-            if (dataEl) dataEl.value = '';
-            if (nameEl) nameEl.value = '';
-            if (boxEl) boxEl.classList.add('hidden');
         }
 
         function buildGoogleCalendarLink(proj) {
@@ -2062,11 +1957,18 @@
                 if (inp.value.trim()) customData[inp.dataset.label] = inp.value.trim();
             });
 
-            const prefix = (db.siteConfig.bookingSettings?.codePrefix || 'OLR').replace(/[^A-Z0-9]/gi, '').toUpperCase() || 'OLR';
-            const newCode = `${prefix}-${Math.floor(1000 + Math.random() * 9000)}`;
+            const prefix = db.siteConfig.bookingSettings?.codePrefix || 'OLR';
+            let newCode = `${prefix}-${Math.floor(1000 + Math.random() * 9000)}`;
+            while (db.projects.some(p => p.code === newCode)) {
+                newCode = `${prefix}-${Math.floor(1000 + Math.random() * 9000)}`;
+            }
             const masterDrive = db.siteConfig.bookingSettings?.googleDriveMasterUrl || 'https://drive.google.com';
-            const transferProofDataUrl = (document.getElementById('booking-transfer-dataurl')?.value || '').trim();
-            const transferProofFileName = (document.getElementById('booking-transfer-filename')?.value || '').trim();
+
+            const now = new Date();
+            const uploadTs = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' +
+                             now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+            const hasTransferProof = Boolean(pendingTransferProofDataUrl);
 
             const newProj = {
                 code: newCode,
@@ -2079,14 +1981,14 @@
                 stage: 1,
                 totalAmount: pkgPrice + addonPrice,
                 paidAmount: 0,
-                paymentStatus: transferProofDataUrl ? 'Bukti Transfer Terlampir (Menunggu Verifikasi)' : 'Menunggu Verifikasi DP',
-                transferProof: transferProofDataUrl ? {
-                    image: transferProofDataUrl,
-                    fileName: transferProofFileName || 'bukti_transfer.jpg',
-                    uploadedAt: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
-                } : null,
+                paymentStatus: hasTransferProof ? 'Bukti DP Diunggah (Menunggu Verifikasi)' : 'Menunggu Verifikasi DP',
                 addons,
                 customData,
+                transferProof: hasTransferProof ? {
+                    image: pendingTransferProofDataUrl,
+                    fileName: pendingTransferProofFileName || 'bukti_transfer.jpg',
+                    uploadedAt: uploadTs
+                } : null,
                 driveLinks: {
                     rawPreview: driveUrlInput || masterDrive,
                     finalEdited: '',
@@ -2097,9 +1999,9 @@
                     selectedFilenamesText: '',
                     revisionNote: '',
                     submittedAt: '',
-                    status: 'Sudah Booking'
+                    status: 'Menunggu Sesi Pemotretan'
                 },
-                studioNote: 'Terima kasih telah melakukan reservasi di Oloris Picture! Tim admin akan segera memverifikasi jadwal & folder Google Drive Anda.',
+                studioNote: 'Terima kasih telah melakukan reservasi! Tim admin akan segera memverifikasi jadwal & folder Google Drive Anda.',
                 crew: {
                     leadPhotographer: 'Belum Ditugaskan',
                     secondPhotographer: 'Belum Ditugaskan',
@@ -2112,6 +2014,13 @@
             db.projects.unshift(newProj);
             saveDatabase('Booking Publik', `Reservasi baru masuk: ${clientName} (${newCode})`);
             applySiteThemeAndHeader();
+
+            const bookingForm = document.getElementById('unified-booking-form');
+            if (bookingForm) bookingForm.reset();
+            pendingTransferProofDataUrl = '';
+            pendingTransferProofFileName = '';
+            document.getElementById('booking-transfer-preview-wrap')?.classList.add('hidden');
+            recalculateBookingTotal();
 
             const calUrl = buildGoogleCalendarLink(newProj);
             const waText = encodeURIComponent(`Halo Oloris Picture, saya *${clientName}* telah melakukan booking paket *${packageName}* untuk tanggal *${eventDate}* di *${location}*.\nKode Lacak: *${newCode}*`);
@@ -2142,14 +2051,6 @@
                     </div>
                 `;
             }
-
-            document.getElementById('unified-booking-form')?.reset();
-            clearTransferProofPreview();
-            selectedBookingPackageName = '';
-            selectedBookingLocation = '';
-            document.querySelectorAll('.booking-addon-checkbox').forEach(cb => { cb.checked = false; });
-            document.querySelectorAll('select.custom-booking-input').forEach(sel => { sel.selectedIndex = 0; });
-            recalculateBookingTotal();
             showToast(`Reservasi ${clientName} berhasil! Kode Lacak: ${newCode}`);
         }
 
@@ -2329,12 +2230,12 @@
 
         function closeAuthModal() {
             pendingTargetRole = null;
+            document.getElementById('role-switch-notice')?.classList.add('hidden');
+            document.getElementById('auth-modal')?.classList.add('hidden');
             const switcher = document.getElementById('quick-role-switcher');
             if (switcher && activeStaffUser) {
                 switcher.value = activeStaffUser.role;
             }
-            document.getElementById('role-switch-notice')?.classList.add('hidden');
-            document.getElementById('auth-modal')?.classList.add('hidden');
         }
 
         function switchAuthTab(tab) {
@@ -2492,7 +2393,7 @@
         }
 
         // =====================================================================
-        // SPLIT-SCREEN VISUAL WEB BUILDER DRAWER (SUPER ADMIN ONLY)
+        // SPLIT-SCREEN VISUAL WEB BUILDER DRAWER (SUPER ADMIN ONLY & PRIVATE)
         // =====================================================================
         function toggleVisualBuilder(forceState) {
             const hasPrivateBuilderAccess = Boolean(
@@ -2590,11 +2491,11 @@
                             </div>
                             <div>
                                 <label class="block text-[11px] text-charcoalSoft mb-1">Judul Besar Hero</label>
-                                <input type="text" value="${slide.title}" oninput="db.siteConfig.heroSlides[${currentHeroSlideIndex}].title=this.value; renderLandingSections(); saveDatabase();" class="w-full px-3 py-2 rounded-lg bg-ivory border border-charcoal/15 text-xs">
+                                <input type="text" value="${slide.title}" oninput="db.siteConfig.heroSlides[${currentHeroSlideIndex}].title=this.value; syncHeroSlideDOM(); saveDatabase();" class="w-full px-3 py-2 rounded-lg bg-ivory border border-charcoal/15 text-xs">
                             </div>
                             <div>
                                 <label class="block text-[11px] text-charcoalSoft mb-1">Subjudul Italic</label>
-                                <input type="text" value="${slide.subtitle}" oninput="db.siteConfig.heroSlides[${currentHeroSlideIndex}].subtitle=this.value; renderLandingSections(); saveDatabase();" class="w-full px-3 py-2 rounded-lg bg-ivory border border-charcoal/15 text-xs">
+                                <input type="text" value="${slide.subtitle}" oninput="db.siteConfig.heroSlides[${currentHeroSlideIndex}].subtitle=this.value; syncHeroSlideDOM(); saveDatabase();" class="w-full px-3 py-2 rounded-lg bg-ivory border border-charcoal/15 text-xs">
                             </div>
                             <div>
                                 <label class="block text-[11px] text-charcoalSoft mb-1">URL Gambar Hero</label>
@@ -2714,6 +2615,19 @@
             showToast('Website dikembalikan ke pengaturan default.');
         }
 
+        function setProjectSelectionStatus(code, statusLabel, suggestedStage) {
+            const proj = db.projects.find(p => p.code === code);
+            if (!proj) return;
+            if (!proj.photoSelection) proj.photoSelection = { quota: 100, selectedFilenamesText: '', revisionNote: '', submittedAt: '', status: '' };
+            proj.photoSelection.status = statusLabel;
+            if (suggestedStage) {
+                proj.stage = suggestedStage;
+            }
+            saveDatabase(`${activeStaffUser.name} (${activeStaffUser.roleLabel})`, `Mengubah status proyek ${proj.code} menjadi "${statusLabel}" (Tahap ${proj.stage}).`);
+            showToast(`Status ${proj.clientName} diubah ke: ${statusLabel}`);
+            renderAdminPortal();
+        }
+
         // =====================================================================
         // VIEW 3: MULTI-ROLE ADMIN ERP & SUPER ADMIN CMS
         // =====================================================================
@@ -2749,8 +2663,8 @@
                 navItems.push({ id: 'finance', icon: 'fa-file-invoice-dollar', label: 'Keuangan, Invoice & Laba' });
             }
             if (role === 'production') {
-                navItems.push({ id: 'production_work', icon: 'fa-camera-retro', label: 'Workspace Produksi & Drive' });
-                navItems.push({ id: 'crew', icon: 'fa-clipboard-list', label: 'Divisi Tim, Job Desk & SOP' });
+                navItems.push({ id: 'production_work', icon: 'fa-camera-retro', label: 'Jadwal & Upload Hasil Kru' });
+                navItems.push({ id: 'crew', icon: 'fa-clipboard-list', label: 'Job Desk & SOP Divisi' });
             }
 
             if (!navItems.some(n => n.id === activeAdminModule) && navItems.length) {
@@ -2773,21 +2687,295 @@
             if (!content) return;
 
             if (activeAdminModule === 'cms') renderModuleSuperAdminCMS(content);
-            else if (activeAdminModule === 'projects' || activeAdminModule === 'production_work') renderModuleProjectsAndDrive(content);
+            else if (activeAdminModule === 'projects') renderModuleProjectsAndDrive(content);
+            else if (activeAdminModule === 'production_work') renderModuleCrewProductionWorkspace(content);
             else if (activeAdminModule === 'crew') renderModuleCrew(content);
             else if (activeAdminModule === 'finance') renderModuleFinance(content);
         }
 
-        function setProjectSelectionStatus(code, statusLabel, suggestedStage) {
+        /**
+         * Dedicated workspace for Photo, Video & Editor Crew:
+         * Focuses strictly on schedules assigned by Admin, client booking form details,
+         * and Google Drive upload links + production status updates.
+         */
+        function renderModuleCrewProductionWorkspace(container) {
+            const staffName = activeStaffUser?.name || '';
+            const staffDivision = activeStaffUser?.division || 'Tim Produksi';
+
+            const isAssignedToCurrentCrew = (proj) => {
+                const c = proj.crew || {};
+                return c.leadPhotographer === staffName || c.secondPhotographer === staffName || c.editor === staffName;
+            };
+
+            const getAssignedRolesForCrew = (proj) => {
+                const c = proj.crew || {};
+                const roles = [];
+                if (c.leadPhotographer === staffName) roles.push('Tim Foto (Lead)');
+                if (c.secondPhotographer === staffName) roles.push('Tim Video / Drone');
+                if (c.editor === staffName) roles.push('Editor & Colorist');
+                return roles;
+            };
+
+            const myProjects = db.projects.filter(isAssignedToCurrentCrew);
+            const displayedProjects = crewProjectScopeFilter === 'mine' ? myProjects : db.projects;
+
+            const crewQuickStatuses = [
+                { label: 'Sesi Pemotretan Berjalan', stage: 2 },
+                { label: 'Backup & Kurasi RAW', stage: 2 },
+                { label: 'Upload Drive Preview', stage: 3 },
+                { label: 'Masih Di-Edit / Retouching', stage: 5 },
+                { label: 'Render Video & Teaser', stage: 5 },
+                { label: 'Selesai & Final Drive Siap', stage: 6 }
+            ];
+
+            container.innerHTML = `
+                <div class="space-y-6 fade-in">
+                    <!-- Header Fokus Kru -->
+                    <div class="bg-white p-6 rounded-2xl border border-champagne/30 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div>
+                            <span class="text-[11px] uppercase tracking-widest text-champagne font-bold">
+                                <i class="fa-solid fa-camera-retro mr-1"></i> Portal Kerja Kru &bull; ${staffDivision}
+                            </span>
+                            <h3 class="font-serif text-2xl sm:text-3xl font-semibold text-charcoal mt-0.5">
+                                Jadwal Liputan, Form Klien &amp; Tempat Upload
+                            </h3>
+                            <p class="text-xs text-charcoalSoft mt-1">
+                                Menampilkan jadwal klien yang telah dibagi oleh Admin untuk <strong>${staffName}</strong> beserta detail form booking &amp; folder upload Google Drive.
+                            </p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button type="button" onclick="crewProjectScopeFilter='mine'; renderAdminPortal();" class="px-4 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                                crewProjectScopeFilter === 'mine'
+                                    ? 'bg-charcoal text-white shadow'
+                                    : 'bg-ivory text-charcoalSoft border border-charcoal/15 hover:border-champagne'
+                            }">
+                                Tugas Saya (${myProjects.length})
+                            </button>
+                            <button type="button" onclick="crewProjectScopeFilter='all'; renderAdminPortal();" class="px-4 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                                crewProjectScopeFilter === 'all'
+                                    ? 'bg-champagne text-white shadow'
+                                    : 'bg-ivory text-charcoalSoft border border-charcoal/15 hover:border-champagne'
+                            }">
+                                Semua Jadwal Tim (${db.projects.length})
+                            </button>
+                        </div>
+                    </div>
+
+                    ${displayedProjects.length === 0 ? `
+                        <div class="bg-white p-10 rounded-2xl border border-charcoal/10 text-center space-y-3">
+                            <div class="w-12 h-12 mx-auto rounded-full bg-champagneLight text-champagneDark flex items-center justify-center text-lg">
+                                <i class="fa-regular fa-calendar-xmark"></i>
+                            </div>
+                            <h4 class="font-serif text-2xl text-charcoal">Belum Ada Jadwal Tugas untuk ${staffName}</h4>
+                            <p class="text-xs text-charcoalSoft max-w-md mx-auto">
+                                Admin Operasional belum membagi jadwal proyek ke akun Anda. Klik <strong>Semua Jadwal Tim</strong> untuk melihat jadwal keseluruhan studio.
+                            </p>
+                        </div>
+                    ` : `
+                        <div class="space-y-6">
+                            ${displayedProjects.map(p => {
+                                const myRoles = getAssignedRolesForCrew(p);
+                                const customEntries = Object.entries(p.customData || {});
+                                const currentStatus = (p.photoSelection?.status || 'Terjadwal').trim();
+                                return `
+                                    <div class="bg-white p-6 rounded-2xl border border-charcoal/15 shadow-sm space-y-5">
+                                        <!-- Baris Atas: Jadwal & Peran Kru dari Admin -->
+                                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-4 border-b border-charcoal/10">
+                                            <div class="space-y-1">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <span class="font-mono text-xs font-bold px-2.5 py-0.5 rounded bg-charcoal text-champagneLight">${p.code}</span>
+                                                    <h4 class="font-serif text-2xl sm:text-3xl font-semibold text-charcoal">${p.clientName}</h4>
+                                                    ${myRoles.length ? myRoles.map(r => `
+                                                        <span class="px-2.5 py-0.5 rounded-full bg-champagne text-white text-[10px] font-bold uppercase tracking-wider">
+                                                            <i class="fa-solid fa-user-check mr-1"></i>Tugas Anda: ${r}
+                                                        </span>
+                                                    `).join('') : `
+                                                        <span class="px-2.5 py-0.5 rounded-full bg-ivoryWarm text-charcoalSoft text-[10px] font-semibold">
+                                                            Jadwal Tim Lain
+                                                        </span>
+                                                    `}
+                                                </div>
+                                                <div class="flex flex-wrap items-center gap-4 text-xs text-charcoalSoft pt-1">
+                                                    <span><i class="fa-regular fa-calendar text-champagne mr-1"></i><strong>Tanggal:</strong> ${p.eventDate}</span>
+                                                    <span><i class="fa-solid fa-location-dot text-champagne mr-1"></i><strong>Lokasi:</strong> ${p.location}</span>
+                                                    <span><i class="fa-solid fa-camera text-champagne mr-1"></i><strong>Paket:</strong> ${p.packageName}</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex flex-wrap items-center gap-2 shrink-0">
+                                                <a href="${buildGoogleCalendarLink(p)}" target="_blank" rel="noopener" class="px-3.5 py-2 rounded-xl bg-ivory border border-charcoal/15 text-xs font-semibold text-charcoal hover:border-champagne">
+                                                    <i class="fa-regular fa-calendar-plus text-champagne mr-1"></i> Simpan Kalender
+                                                </a>
+                                                <a href="https://wa.me/${(p.whatsapp || '').replace(/^0/, '62')}" target="_blank" rel="noopener" class="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold">
+                                                    <i class="fa-brands fa-whatsapp mr-1"></i> Hubungi Klien
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        <!-- 2 Kolom Utama: Ringkasan Form Client & Tempat Upload Google Drive -->
+                                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 text-xs">
+                                            <!-- KOLOM 1: DETAIL FORM BOOKING CLIENT -->
+                                            <div class="lg:col-span-5 p-4 rounded-2xl bg-ivory border border-charcoal/10 space-y-3">
+                                                <div class="flex items-center justify-between border-b border-charcoal/10 pb-2">
+                                                    <span class="font-bold uppercase tracking-wider text-charcoal">
+                                                        <i class="fa-solid fa-file-lines text-champagne mr-1.5"></i>Detail Form Booking Client
+                                                    </span>
+                                                    <span class="text-[11px] font-semibold text-champagneDark">${p.crew?.taskStatus || 'Siap Liputan'}</span>
+                                                </div>
+
+                                                <div class="space-y-2">
+                                                    <div class="flex justify-between gap-2">
+                                                        <span class="text-charcoalSoft">Nama Pasangan:</span>
+                                                        <strong class="text-charcoal text-right">${p.clientName}</strong>
+                                                    </div>
+                                                    <div class="flex justify-between gap-2">
+                                                        <span class="text-charcoalSoft">Kontak WA / Email:</span>
+                                                        <strong class="text-charcoal text-right">${p.whatsapp}</strong>
+                                                    </div>
+                                                    <div class="flex justify-between gap-2">
+                                                        <span class="text-charcoalSoft">Add-Ons Paket:</span>
+                                                        <strong class="text-charcoal text-right">${(p.addons && p.addons.length) ? p.addons.join(', ') : 'Tidak ada add-on'}</strong>
+                                                    </div>
+                                                    ${customEntries.map(([k, v]) => `
+                                                        <div class="flex justify-between gap-2">
+                                                            <span class="text-charcoalSoft">${k}:</span>
+                                                            <strong class="text-charcoal text-right">${v}</strong>
+                                                        </div>
+                                                    `).join('')}
+                                                </div>
+
+                                                <div class="pt-2 border-t border-charcoal/10 space-y-1.5">
+                                                    <span class="text-[10px] font-bold uppercase text-charcoalSoft block">Pembagian Tim dari Admin:</span>
+                                                    <div class="grid grid-cols-3 gap-1.5 text-[11px]">
+                                                        <div class="p-2 rounded-lg bg-white border border-charcoal/10">
+                                                            <span class="text-charcoalSoft block text-[10px]">Tim Foto</span>
+                                                            <strong class="text-charcoal">${p.crew?.leadPhotographer || '-'}</strong>
+                                                        </div>
+                                                        <div class="p-2 rounded-lg bg-white border border-charcoal/10">
+                                                            <span class="text-charcoalSoft block text-[10px]">Tim Video</span>
+                                                            <strong class="text-charcoal">${p.crew?.secondPhotographer || '-'}</strong>
+                                                        </div>
+                                                        <div class="p-2 rounded-lg bg-white border border-charcoal/10">
+                                                            <span class="text-charcoalSoft block text-[10px]">Editor</span>
+                                                            <strong class="text-charcoal">${p.crew?.editor || '-'}</strong>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                ${p.photoSelection?.selectedFilenamesText ? `
+                                                    <div class="p-3 rounded-xl bg-white border border-champagne/40 space-y-1">
+                                                        <div class="flex items-center justify-between">
+                                                            <span class="text-[10px] font-bold uppercase text-champagneDark">Kode File Pilihan Klien:</span>
+                                                            <button type="button" onclick="copyClientSelectedFilenames('${p.code}')" class="text-[11px] font-semibold text-charcoal hover:text-champagneDark">
+                                                                <i class="fa-regular fa-copy mr-1"></i>Salin
+                                                            </button>
+                                                        </div>
+                                                        <p class="font-mono text-[11px] text-charcoal break-words">${p.photoSelection.selectedFilenamesText}</p>
+                                                        ${p.photoSelection.revisionNote ? `<p class="text-[11px] text-charcoalSoft italic">Catatan Klien: "${p.photoSelection.revisionNote}"</p>` : ''}
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+
+                                            <!-- KOLOM 2: TEMPAT UPLOAD GOOGLE DRIVE & UPDATE PROGRES KRU -->
+                                            <div class="lg:col-span-7 p-4 rounded-2xl bg-ivoryWarm/60 border border-champagne/30 space-y-4">
+                                                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-charcoal/10 pb-2">
+                                                    <span class="font-bold uppercase tracking-wider text-charcoal">
+                                                        <i class="fa-brands fa-google-drive text-champagne mr-1.5"></i>Tempat Upload &amp; Tautan Hasil Foto / Video
+                                                    </span>
+                                                    <span class="px-2.5 py-0.5 rounded-full bg-charcoal text-champagneLight text-[11px] font-semibold">
+                                                        Status: ${currentStatus}
+                                                    </span>
+                                                </div>
+
+                                                <!-- 3 Slot Upload Google Drive -->
+                                                <div class="space-y-3">
+                                                    <div class="p-3 rounded-xl bg-white border border-charcoal/10 space-y-1.5">
+                                                        <div class="flex items-center justify-between">
+                                                            <label class="font-bold text-charcoal"><i class="fa-solid fa-folder-open text-champagne mr-1"></i>1. Folder Upload Foto RAW / Preview (Tim Foto)</label>
+                                                            <a href="${p.driveLinks?.rawPreview || db.siteConfig.bookingSettings?.googleDriveMasterUrl || 'https://drive.google.com'}" target="_blank" rel="noopener" class="px-2.5 py-1 rounded-lg bg-champagneLight text-champagneDark font-semibold hover:bg-champagne hover:text-white transition-colors">
+                                                                <i class="fa-solid fa-cloud-arrow-up mr-1"></i>Buka Folder Upload
+                                                            </a>
+                                                        </div>
+                                                        <input type="url" id="crew-upload-raw-${p.code}" value="${p.driveLinks?.rawPreview || ''}" placeholder="Tempel link folder Google Drive Preview / RAW setelah upload..." class="w-full px-3 py-2 rounded-lg bg-ivory border border-charcoal/15">
+                                                    </div>
+
+                                                    <div class="p-3 rounded-xl bg-white border border-charcoal/10 space-y-1.5">
+                                                        <div class="flex items-center justify-between">
+                                                            <label class="font-bold text-charcoal"><i class="fa-solid fa-images text-emerald-700 mr-1"></i>2. Folder Upload Foto Final Edited HD (Editor)</label>
+                                                            <a href="${p.driveLinks?.finalEdited || p.driveLinks?.rawPreview || db.siteConfig.bookingSettings?.googleDriveMasterUrl || 'https://drive.google.com'}" target="_blank" rel="noopener" class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-semibold hover:bg-emerald-700 hover:text-white transition-colors">
+                                                                <i class="fa-solid fa-cloud-arrow-up mr-1"></i>Buka Folder Upload
+                                                            </a>
+                                                        </div>
+                                                        <input type="url" id="crew-upload-final-${p.code}" value="${p.driveLinks?.finalEdited || ''}" placeholder="Tempel link folder Google Drive Final Edited..." class="w-full px-3 py-2 rounded-lg bg-ivory border border-charcoal/15">
+                                                    </div>
+
+                                                    <div class="p-3 rounded-xl bg-white border border-charcoal/10 space-y-1.5">
+                                                        <div class="flex items-center justify-between">
+                                                            <label class="font-bold text-charcoal"><i class="fa-solid fa-film text-charcoal mr-1"></i>3. Folder Upload Video &amp; Teaser (Tim Video)</label>
+                                                            <a href="${p.driveLinks?.videoTeaser || p.driveLinks?.rawPreview || db.siteConfig.bookingSettings?.googleDriveMasterUrl || 'https://drive.google.com'}" target="_blank" rel="noopener" class="px-2.5 py-1 rounded-lg bg-ivoryWarm text-charcoal font-semibold hover:bg-charcoal hover:text-white transition-colors">
+                                                                <i class="fa-solid fa-cloud-arrow-up mr-1"></i>Buka Folder Upload
+                                                            </a>
+                                                        </div>
+                                                        <input type="url" id="crew-upload-video-${p.code}" value="${p.driveLinks?.videoTeaser || ''}" placeholder="Tempel link folder Google Drive Video / Teaser..." class="w-full px-3 py-2 rounded-lg bg-ivory border border-charcoal/15">
+                                                    </div>
+                                                </div>
+
+                                                <!-- Tombol Cepat Status Kerja Kru -->
+                                                <div class="space-y-1.5">
+                                                    <span class="text-[10px] font-bold uppercase text-charcoalSoft block">Update Status Pengerjaan Kru (1-Klik):</span>
+                                                    <div class="flex flex-wrap gap-1.5">
+                                                        ${crewQuickStatuses.map(st => {
+                                                            const active = currentStatus.toLowerCase() === st.label.toLowerCase();
+                                                            return `
+                                                                <button type="button" onclick="setProjectSelectionStatus('${p.code}', '${st.label}', ${st.stage})" class="px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold transition-all ${
+                                                                    active ? 'bg-charcoal text-champagneLight border-charcoal shadow-sm' : 'bg-white text-charcoal border-charcoal/15 hover:border-champagne'
+                                                                }">
+                                                                    ${active ? '<i class="fa-solid fa-circle-check mr-1"></i>' : ''}${st.label}
+                                                                </button>
+                                                            `;
+                                                        }).join('')}
+                                                    </div>
+                                                </div>
+
+                                                <!-- Catatan Kru & Tombol Simpan Link Upload -->
+                                                <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end pt-1">
+                                                    <div class="sm:col-span-8">
+                                                        <label class="block text-[10px] font-bold uppercase text-charcoalSoft mb-1">Catatan Progres / Info Folder untuk Admin &amp; Klien</label>
+                                                        <input type="text" id="crew-upload-note-${p.code}" value="${p.studioNote || ''}" placeholder="Contoh: RAW & Preview foto sudah diupload lengkap ke folder 1..." class="w-full px-3 py-2.5 rounded-xl bg-white border border-charcoal/15">
+                                                    </div>
+                                                    <div class="sm:col-span-4">
+                                                        <button type="button" onclick="saveCrewUploadLinks('${p.code}')" class="w-full py-2.5 px-4 rounded-xl bg-champagne hover:bg-champagneDark text-white font-semibold uppercase tracking-wider shadow">
+                                                            <i class="fa-solid fa-cloud-arrow-up mr-1"></i> Simpan Link Upload
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        function saveCrewUploadLinks(code) {
             const proj = db.projects.find(p => p.code === code);
             if (!proj) return;
-            if (!proj.photoSelection) proj.photoSelection = { quota: 100, selectedFilenamesText: '', revisionNote: '', submittedAt: '', status: '' };
-            proj.photoSelection.status = statusLabel;
-            if (suggestedStage) {
-                proj.stage = suggestedStage;
-            }
-            saveDatabase(`${activeStaffUser.name} (${activeStaffUser.roleLabel})`, `Mengubah status proyek ${proj.code} menjadi "${statusLabel}" (Tahap ${proj.stage}).`);
-            showToast(`Status ${proj.clientName} diubah ke: ${statusLabel}`);
+            const rawUrl = (document.getElementById(`crew-upload-raw-${code}`)?.value || '').trim();
+            const finalUrl = (document.getElementById(`crew-upload-final-${code}`)?.value || '').trim();
+            const videoUrl = (document.getElementById(`crew-upload-video-${code}`)?.value || '').trim();
+            const note = (document.getElementById(`crew-upload-note-${code}`)?.value || '').trim();
+
+            proj.driveLinks.rawPreview = rawUrl;
+            proj.driveLinks.finalEdited = finalUrl;
+            proj.driveLinks.videoTeaser = videoUrl;
+            if (note) proj.studioNote = note;
+            proj.crew.taskStatus = `Link hasil diupdate oleh ${activeStaffUser.name}`;
+
+            saveDatabase(`${activeStaffUser.name} (${activeStaffUser.division || 'Kru'})`, `Mengunggah/memperbarui tautan Google Drive hasil untuk proyek ${proj.code}.`);
+            showToast(`Link upload Google Drive untuk ${proj.clientName} berhasil disimpan!`);
             renderAdminPortal();
         }
 
@@ -2821,6 +3009,10 @@
         }
 
         function renderModuleProjectsAndDrive(container) {
+            const canEditOrDeleteProject = activeStaffUser && (activeStaffUser.role === 'superadmin' || activeStaffUser.role === 'admin');
+            const editProj = editingProjectCode ? db.projects.find(item => item.code === editingProjectCode) : null;
+            const customFields = db.siteConfig.customBookingFields || [];
+
             container.innerHTML = `
                 <div class="space-y-6 fade-in">
                     <div class="flex flex-wrap items-center justify-between gap-3">
@@ -2828,11 +3020,118 @@
                             <h3 class="font-serif text-2xl font-semibold text-charcoal">Manajemen Proyek, Progres Foto &amp; Google Drive</h3>
                             <p class="text-xs text-charcoalSoft">Perubahan status tombol, tahapan, link Google Drive, kuota pilihan, dan catatan studio langsung tampil di Portal Lacak Klien.</p>
                         </div>
+                        <span class="px-3.5 py-1.5 rounded-xl bg-white border border-charcoal/10 text-xs font-semibold text-charcoal">
+                            Total Proyek: <strong>${db.projects.length}</strong>
+                        </span>
                     </div>
 
+                    ${editProj && canEditOrDeleteProject ? `
+                        <form onsubmit="saveEditedBookingForm(event, '${editProj.code}')" class="bg-white p-6 rounded-2xl border-2 border-champagne shadow-lg space-y-5 fade-in">
+                            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-charcoal/10 pb-3">
+                                <div>
+                                    <span class="text-[10px] font-bold uppercase tracking-widest text-champagneDark">Mode Edit Form Booking &bull; ${editProj.code}</span>
+                                    <h4 class="font-serif text-2xl font-semibold text-charcoal">Edit Data Booking: ${editProj.clientName}</h4>
+                                </div>
+                                <button type="button" onclick="cancelEditBookingForm()" class="px-3.5 py-1.5 rounded-xl bg-ivory border border-charcoal/15 text-xs font-semibold text-charcoal hover:bg-charcoal hover:text-white transition-colors">
+                                    Batal Edit
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                                <div>
+                                    <label class="block text-[11px] font-bold uppercase text-charcoalSoft mb-1">Nama Pasangan *</label>
+                                    <input type="text" id="edit-bk-name" required value="${editProj.clientName}" class="w-full px-3.5 py-2.5 rounded-xl bg-ivory border border-charcoal/15">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold uppercase text-charcoalSoft mb-1">Nomor WhatsApp *</label>
+                                    <input type="tel" id="edit-bk-wa" required value="${editProj.whatsapp || ''}" class="w-full px-3.5 py-2.5 rounded-xl bg-ivory border border-charcoal/15">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold uppercase text-charcoalSoft mb-1">Email Klien</label>
+                                    <input type="email" id="edit-bk-email" value="${editProj.email || ''}" class="w-full px-3.5 py-2.5 rounded-xl bg-ivory border border-charcoal/15">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold uppercase text-charcoalSoft mb-1">Tanggal Pemotretan / Acara *</label>
+                                    <input type="date" id="edit-bk-date" required value="${editProj.eventDate || ''}" class="w-full px-3.5 py-2.5 rounded-xl bg-ivory border border-charcoal/15">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold uppercase text-charcoalSoft mb-1">Paket Layanan *</label>
+                                    <select id="edit-bk-pkg" class="w-full px-3.5 py-2.5 rounded-xl bg-ivory border border-charcoal/15 font-semibold">
+                                        ${db.siteConfig.packages.map(pkg => `<option value="${pkg.name}" data-price="${pkg.price}" ${editProj.packageName === pkg.name ? 'selected' : ''}>${pkg.name} (${formatRupiah(pkg.price)})</option>`).join('')}
+                                        ${!db.siteConfig.packages.some(pkg => pkg.name === editProj.packageName) ? `<option value="${editProj.packageName}" selected>${editProj.packageName}</option>` : ''}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold uppercase text-charcoalSoft mb-1">Kota / Lokasi Venue *</label>
+                                    <input type="text" id="edit-bk-loc" required value="${editProj.location || ''}" class="w-full px-3.5 py-2.5 rounded-xl bg-ivory border border-charcoal/15">
+                                </div>
+                            </div>
+
+                            ${customFields.length ? `
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-charcoal/10 text-xs">
+                                    ${customFields.map((f, i) => {
+                                        const currentVal = (editProj.customData && editProj.customData[f.label]) || '';
+                                        return `
+                                            <div>
+                                                <label class="block text-[11px] font-bold uppercase text-charcoalSoft mb-1">${f.label}</label>
+                                                ${f.type === 'select' ? `
+                                                    <select id="edit-bk-custom-${i}" data-label="${f.label}" class="edit-bk-custom-input w-full px-3.5 py-2.5 rounded-xl bg-ivory border border-charcoal/15">
+                                                        ${(f.options || []).map(o => `<option value="${o}" ${currentVal === o ? 'selected' : ''}>${o}</option>`).join('')}
+                                                    </select>
+                                                ` : `
+                                                    <input type="text" id="edit-bk-custom-${i}" data-label="${f.label}" value="${currentVal}" class="edit-bk-custom-input w-full px-3.5 py-2.5 rounded-xl bg-ivory border border-charcoal/15">
+                                                `}
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            ` : ''}
+
+                            <div class="pt-2 border-t border-charcoal/10 space-y-2 text-xs">
+                                <span class="block text-[11px] font-bold uppercase text-charcoalSoft">Add-Ons Paket:</span>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                                    ${db.siteConfig.addons.map(a => {
+                                        const checked = Array.isArray(editProj.addons) && editProj.addons.includes(a.name);
+                                        return `
+                                            <label class="p-2.5 rounded-xl bg-ivory border border-charcoal/10 flex items-center justify-between gap-2 cursor-pointer">
+                                                <span class="flex items-center gap-2">
+                                                    <input type="checkbox" value="${a.name}" data-price="${a.price}" ${checked ? 'checked' : ''} class="edit-bk-addon-cb accent-champagne">
+                                                    <span>${a.name}</span>
+                                                </span>
+                                                <span class="font-semibold text-champagneDark text-[11px]">+${formatRupiah(a.price)}</span>
+                                            </label>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-charcoal/10 text-xs items-end">
+                                <div>
+                                    <label class="block text-[11px] font-bold uppercase text-charcoalSoft mb-1">Total Nilai Tagihan (Rp) — Otomatis/Manual</label>
+                                    <input type="number" id="edit-bk-total" value="${editProj.totalAmount || 0}" class="w-full px-3.5 py-2.5 rounded-xl bg-ivory border border-charcoal/15 font-mono font-bold">
+                                </div>
+                                <div class="flex flex-wrap justify-end gap-2">
+                                    <button type="button" onclick="recalcEditedBookingAmount()" class="px-4 py-2.5 rounded-xl bg-ivoryWarm border border-charcoal/15 text-charcoal font-semibold hover:border-champagne">
+                                        Hitung Ulang dari Paket &amp; Add-On
+                                    </button>
+                                    <button type="submit" class="px-6 py-2.5 rounded-xl bg-champagne hover:bg-champagneDark text-white font-semibold uppercase tracking-wider shadow">
+                                        <i class="fa-solid fa-floppy-disk mr-1.5"></i> Simpan Perubahan Form
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    ` : ''}
+
                     <div class="space-y-5">
-                        ${db.projects.map(p => `
-                            <div class="bg-white p-6 rounded-2xl border border-charcoal/10 shadow-sm space-y-4">
+                        ${db.projects.length === 0 ? `
+                            <div class="bg-white p-10 rounded-2xl border border-charcoal/10 text-center space-y-2">
+                                <p class="font-serif text-2xl text-charcoal">Belum Ada Data Booking Proyek</p>
+                                <p class="text-xs text-charcoalSoft">Reservasi baru dari halaman Booking publik akan otomatis muncul di sini.</p>
+                            </div>
+                        ` : db.projects.map(p => {
+                            const isConfirmingDelete = deletingProjectCode === p.code;
+                            return `
+                            <div class="bg-white p-6 rounded-2xl border ${editingProjectCode === p.code ? 'border-champagne ring-1 ring-champagne/40' : 'border-charcoal/10'} shadow-sm space-y-4">
                                 <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-charcoal/10">
                                     <div>
                                         <div class="flex flex-wrap items-center gap-2">
@@ -2840,7 +3139,10 @@
                                             <h4 class="font-serif text-2xl font-semibold text-charcoal">${p.clientName}</h4>
                                             <span class="text-xs text-charcoalSoft">&bull; ${p.packageName} (${p.eventDate})</span>
                                         </div>
-                                        <p class="text-xs text-charcoalSoft mt-1">Lokasi: ${p.location} &bull; WA: ${p.whatsapp} &bull; Kru: <strong>${p.crew.leadPhotographer}</strong> / <strong>${p.crew.editor}</strong></p>
+                                        <p class="text-xs text-charcoalSoft mt-1">
+                                            Lokasi: ${p.location} &bull; WA: ${p.whatsapp} ${p.email ? `&bull; Email: ${p.email}` : ''} &bull; Kru: <strong>${p.crew.leadPhotographer}</strong> / <strong>${p.crew.editor}</strong>
+                                        </p>
+                                        ${p.addons && p.addons.length ? `<p class="text-[11px] text-champagneDark mt-0.5">Add-ons: ${p.addons.join(', ')}</p>` : ''}
                                     </div>
                                     <div class="flex flex-wrap items-center gap-2">
                                         <a href="${buildGoogleCalendarLink(p)}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-xl bg-ivory border border-charcoal/15 text-xs font-semibold text-charcoal hover:border-champagne">
@@ -2849,8 +3151,33 @@
                                         <button type="button" onclick="quickClientLogin('${p.code}')" class="px-3 py-1.5 rounded-xl bg-champagneLight text-champagneDark text-xs font-semibold">
                                             Lihat Tampilan Klien
                                         </button>
+                                        ${canEditOrDeleteProject ? `
+                                            <button type="button" onclick="startEditBookingForm('${p.code}')" class="px-3 py-1.5 rounded-xl bg-charcoal hover:bg-champagneDark text-white text-xs font-semibold transition-colors">
+                                                <i class="fa-solid fa-pen-to-square mr-1"></i> Edit Form
+                                            </button>
+                                            <button type="button" onclick="promptDeleteBooking('${p.code}')" class="px-3 py-1.5 rounded-xl bg-red-50 hover:bg-red-600 text-red-700 hover:text-white border border-red-200 text-xs font-semibold transition-colors">
+                                                <i class="fa-solid fa-trash-can mr-1"></i> Hapus
+                                            </button>
+                                        ` : ''}
                                     </div>
                                 </div>
+
+                                ${isConfirmingDelete && canEditOrDeleteProject ? `
+                                    <div class="p-4 rounded-xl bg-red-50 border border-red-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs fade-in">
+                                        <div class="text-red-900">
+                                            <strong class="block"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>Konfirmasi Penghapusan Data Booking (${p.code})</strong>
+                                            <span>Yakin ingin menghapus booking milik <strong>${p.clientName}</strong>? Data proyek, jadwal kru, dan tautan Drive proyek ini akan dihapus permanen.</span>
+                                        </div>
+                                        <div class="flex items-center gap-2 shrink-0">
+                                            <button type="button" onclick="cancelDeleteBooking()" class="px-3.5 py-2 rounded-xl bg-white border border-charcoal/20 text-charcoal font-semibold">
+                                                Batal
+                                            </button>
+                                            <button type="button" onclick="confirmDeleteBooking('${p.code}')" class="px-4 py-2 rounded-xl bg-red-700 hover:bg-red-800 text-white font-semibold shadow">
+                                                Ya, Hapus Permanen
+                                            </button>
+                                        </div>
+                                    </div>
+                                ` : ''}
 
                                 ${renderStatusButtonsGroup(p)}
 
@@ -2903,26 +3230,115 @@
                                     </div>
                                 </div>
                             </div>
-                        `).join('')}
+                        `;
+                        }).join('')}
                     </div>
                 </div>
             `;
         }
 
-        function saveProjectDriveAndStage(code) {
+        function startEditBookingForm(code) {
+            if (!activeStaffUser || (activeStaffUser.role !== 'superadmin' && activeStaffUser.role !== 'admin')) {
+                showToast('Hanya Super Admin dan Admin yang dapat mengedit form booking.', 'error');
+                return;
+            }
+            editingProjectCode = code;
+            deletingProjectCode = null;
+            renderAdminPortal();
+            document.getElementById('admin-module-content')?.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelEditBookingForm() {
+            editingProjectCode = null;
+            renderAdminPortal();
+        }
+
+        function recalcEditedBookingAmount() {
+            const pkgSel = document.getElementById('edit-bk-pkg');
+            const totalInput = document.getElementById('edit-bk-total');
+            if (!pkgSel || !totalInput) return;
+            const pkgPrice = Number(pkgSel.options[pkgSel.selectedIndex]?.dataset.price || 0);
+            let addonPrice = 0;
+            document.querySelectorAll('.edit-bk-addon-cb:checked').forEach(cb => {
+                addonPrice += Number(cb.dataset.price || 0);
+            });
+            totalInput.value = pkgPrice + addonPrice;
+            showToast('Total tagihan dihitung ulang dari paket & add-ons.');
+        }
+
+        function saveEditedBookingForm(e, code) {
+            e.preventDefault();
+            if (!activeStaffUser || (activeStaffUser.role !== 'superadmin' && activeStaffUser.role !== 'admin')) {
+                showToast('Akses ditolak.', 'error');
+                return;
+            }
             const proj = db.projects.find(p => p.code === code);
             if (!proj) return;
-            const stageVal = Number(document.getElementById(`proj-stage-${code}`)?.value);
-            const quotaVal = Number(document.getElementById(`proj-quota-${code}`)?.value);
-            proj.stage = Number.isFinite(stageVal) && stageVal >= 1 && stageVal <= 6 ? stageVal : proj.stage;
-            proj.photoSelection.quota = Number.isFinite(quotaVal) && quotaVal > 0 ? Math.floor(quotaVal) : 100;
-            proj.driveLinks.rawPreview = (document.getElementById(`proj-drive-raw-${code}`)?.value || '').trim();
-            proj.driveLinks.finalEdited = (document.getElementById(`proj-drive-final-${code}`)?.value || '').trim();
-            proj.driveLinks.videoTeaser = (document.getElementById(`proj-drive-video-${code}`)?.value || '').trim();
-            proj.studioNote = (document.getElementById(`proj-note-${code}`)?.value || '').trim();
 
-            saveDatabase(`${activeStaffUser.name} (${activeStaffUser.roleLabel})`, `Memperbarui progres tahap ${proj.stage} & link Google Drive untuk ${proj.code}.`);
-            showToast(`Progres & Google Drive untuk ${proj.clientName} berhasil disimpan!`);
+            proj.clientName = (document.getElementById('edit-bk-name')?.value || '').trim() || proj.clientName;
+            proj.whatsapp = (document.getElementById('edit-bk-wa')?.value || '').trim();
+            proj.email = (document.getElementById('edit-bk-email')?.value || '').trim();
+            proj.eventDate = (document.getElementById('edit-bk-date')?.value || '').trim() || proj.eventDate;
+            proj.packageName = document.getElementById('edit-bk-pkg')?.value || proj.packageName;
+            proj.location = (document.getElementById('edit-bk-loc')?.value || '').trim() || proj.location;
+
+            const updatedAddons = [];
+            document.querySelectorAll('.edit-bk-addon-cb:checked').forEach(cb => {
+                updatedAddons.push(cb.value);
+            });
+            proj.addons = updatedAddons;
+
+            const updatedCustom = {};
+            document.querySelectorAll('.edit-bk-custom-input').forEach(inp => {
+                if (inp.value.trim()) updatedCustom[inp.dataset.label] = inp.value.trim();
+            });
+            proj.customData = updatedCustom;
+
+            const rawTotal = Number(document.getElementById('edit-bk-total')?.value);
+            if (Number.isFinite(rawTotal) && rawTotal >= 0) {
+                proj.totalAmount = rawTotal;
+            }
+
+            editingProjectCode = null;
+            saveDatabase(`${activeStaffUser.name} (${activeStaffUser.roleLabel})`, `Mengedit data form booking proyek ${proj.code} (${proj.clientName}).`);
+            applySiteThemeAndHeader();
+            showToast(`Data form booking ${proj.clientName} (${proj.code}) berhasil diperbarui!`);
+            renderAdminPortal();
+        }
+
+        function promptDeleteBooking(code) {
+            if (!activeStaffUser || (activeStaffUser.role !== 'superadmin' && activeStaffUser.role !== 'admin')) {
+                showToast('Hanya Super Admin dan Admin yang dapat menghapus booking.', 'error');
+                return;
+            }
+            deletingProjectCode = code;
+            renderAdminPortal();
+        }
+
+        function cancelDeleteBooking() {
+            deletingProjectCode = null;
+            renderAdminPortal();
+        }
+
+        function confirmDeleteBooking(code) {
+            if (!activeStaffUser || (activeStaffUser.role !== 'superadmin' && activeStaffUser.role !== 'admin')) {
+                showToast('Akses ditolak.', 'error');
+                return;
+            }
+            const idx = db.projects.findIndex(p => p.code === code);
+            if (idx === -1) return;
+            const removed = db.projects[idx];
+            db.projects.splice(idx, 1);
+
+            if (editingProjectCode === code) editingProjectCode = null;
+            if (deletingProjectCode === code) deletingProjectCode = null;
+            if (activeClientCode === code && db.projects.length > 0) {
+                activeClientCode = db.projects[0].code;
+            }
+
+            saveDatabase(`${activeStaffUser.name} (${activeStaffUser.roleLabel})`, `Menghapus data booking proyek ${removed.code} (${removed.clientName}).`);
+            applySiteThemeAndHeader();
+            showToast(`Data booking ${removed.clientName} (${removed.code}) telah dihapus.`);
             renderAdminPortal();
         }
 
