@@ -388,7 +388,7 @@
                     <span class="font-serif text-2xl uppercase tiare-tracking text-white block">OLORIS PICTURE</span>
                     <span class="text-[10px] uppercase tracking-widest text-champagneLight block mt-1">Studio ERP &amp; CMS</span>
                     <div class="mt-4 p-3 rounded-xl bg-white/5 border border-white/10">
-                        <p id="admin-staff-name" class="text-xs font-bold text-white">Nadya Putri</p>
+                        <p id="admin-staff-name" class="text-xs font-bold text-white">Giofani</p>
                         <p id="admin-staff-role" class="text-[11px] text-champagneLight">Super Admin</p>
                     </div>
                 </div>
@@ -787,7 +787,7 @@
             siteConfig: JSON.parse(JSON.stringify(DEFAULT_SITE_CONFIG)),
             staff: [
                 {
-                    id: 'STF-01', name: 'Nadya Putri', role: 'superadmin', roleLabel: 'Super Admin',
+                    id: 'STF-01', name: 'Giofani', role: 'superadmin', roleLabel: 'Super Admin',
                     division: 'Manajemen & Creative', pin: '1111', specialty: 'Owner & Creative Director — Oloris Picture',
                     location: 'Surabaya Pusat (Studio Utama)', phone: '081234567890',
                     jobDesk: 'Mengatur standar artistik editorial Oloris Picture, kurasi portofolio, kebijakan harga paket, dan persetujuan akhir proyek VIP.',
@@ -981,7 +981,8 @@
                     phone: '081234567890',
                     jobDesk: 'Bertanggung jawab menjalankan standar pelayanan dan produksi studio sesuai divisi.',
                     sop: '1. Koordinasi jadwal H-2.\n2. Laporan hasil kerja & backup data tepat waktu.',
-                    ...s
+                    ...s,
+                    name: s.id === 'STF-01' ? 'Giofani' : s.name
                 }))
                 : base.staff;
 
